@@ -71,6 +71,8 @@ dependencies:
   flutter_barcode_scanner: ^2.0.0
   barcode_widget: ^2.0.4
   googleapis_auth: ^1.6.0
+  agora_rtc_engine: ^6.3.2
+  http: ^1.2.2
 
 
 dev_dependencies:
