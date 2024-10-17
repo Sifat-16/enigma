@@ -48,7 +48,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onTap: () {
               ref
                   .read(goRouterProvider)
-                  .push(ProfileScreen.setRoute(profileEntity: profileEntity));
+                  .push(ProfileScreen.setRoute(), extra: profileEntity);
             },
             child: ListTile(
               leading: CircularDisplayPicture(

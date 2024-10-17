@@ -104,15 +104,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             )
           ]),
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: buildImageSection(context, profileController),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: buildImageSection(context, profileController),
+              ),
+              const SizedBox(
+                height: 40,
+              ),
+              Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -126,9 +129,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   buildPhoneNumberSection(context, profileController),
                 ],
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -143,29 +146,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Phone Number",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    Text(
-                      "${profileController.profileEntity?.phoneNumber}",
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
+                Flexible(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Phone Number",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Text("${profileController.profileEntity?.phoneNumber}",
+                          style: Theme.of(context).textTheme.titleLarge,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  onPressed: () async {
-                    phoneNumberTEC.text =
-                        profileController.profileEntity?.phoneNumber ?? "";
-                    ref
-                        .read(profileProvider.notifier)
-                        .toggleProfileEdit("phoneNumber");
-                  },
-                  icon: const Icon(
-                    Icons.edit,
+                Flexible(
+                  flex: 1,
+                  child: IconButton(
+                    onPressed: () async {
+                      phoneNumberTEC.text =
+                          profileController.profileEntity?.phoneNumber ?? "";
+                      ref
+                          .read(profileProvider.notifier)
+                          .toggleProfileEdit("phoneNumber");
+                    },
+                    icon: const Icon(
+                      Icons.edit,
+                    ),
                   ),
                 )
               ],
@@ -173,11 +181,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
+                Flexible(
+                  flex: 4,
                   child: TextFormField(
                     controller: phoneNumberTEC,
                     maxLines: null,
                     decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
                       fillColor: Theme.of(context)
                           .colorScheme
@@ -191,25 +201,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () async {
-                    if (profileController.profileEntity != null) {
-                      ProfileEntity updatedProfile =
-                          profileController.profileEntity!;
-                      updatedProfile.phoneNumber = phoneNumberTEC.text.trim();
+                Flexible(
+                  flex: 1,
+                  child: IconButton(
+                    onPressed: () async {
+                      if (profileController.profileEntity != null) {
+                        ProfileEntity updatedProfile =
+                            profileController.profileEntity!;
+                        updatedProfile.phoneNumber = phoneNumberTEC.text.trim();
+                        ref
+                            .read(profileProvider.notifier)
+                            .updateProfile(updatedProfile);
+                        ref
+                            .read(profileProvider.notifier)
+                            .readProfile(updatedProfile.uid ?? "");
+                      }
                       ref
                           .read(profileProvider.notifier)
-                          .updateProfile(updatedProfile);
-                      ref
-                          .read(profileProvider.notifier)
-                          .readProfile(updatedProfile.uid ?? "");
-                    }
-                    ref
-                        .read(profileProvider.notifier)
-                        .toggleProfileEdit("phoneNumber");
-                  },
-                  icon: const Icon(
-                    Icons.check,
+                          .toggleProfileEdit("phoneNumber");
+                    },
+                    icon: const Icon(
+                      Icons.check,
+                    ),
                   ),
                 )
               ],
@@ -226,29 +239,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Email",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    Text(
-                      "${sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_EMAIL)}",
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
+                Flexible(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Email",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Text(
+                          "${sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_EMAIL)}",
+                          style: Theme.of(context).textTheme.titleLarge,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  onPressed: () async {
-                    emailTEC.text = sharedPreferenceManager.getValue(
-                        key: SharedPreferenceKeys.USER_EMAIL);
-                    ref
-                        .read(profileProvider.notifier)
-                        .toggleProfileEdit("email");
-                  },
-                  icon: const Icon(
-                    Icons.edit,
+                Flexible(
+                  flex: 1,
+                  child: IconButton(
+                    onPressed: () async {
+                      emailTEC.text = sharedPreferenceManager.getValue(
+                          key: SharedPreferenceKeys.USER_EMAIL);
+                      ref
+                          .read(profileProvider.notifier)
+                          .toggleProfileEdit("email");
+                    },
+                    icon: const Icon(
+                      Icons.edit,
+                    ),
                   ),
                 )
               ],
@@ -256,11 +275,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
+                Flexible(
+                  flex: 4,
                   child: TextFormField(
                     controller: emailTEC,
-                    maxLines: null,
                     decoration: InputDecoration(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
                       fillColor: Theme.of(context)
                           .colorScheme
@@ -274,76 +295,88 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () async {
-                    bool isSuccess = false;
+                Flexible(
+                  flex: 1,
+                  child: IconButton(
+                    onPressed: () async {
+                      bool isSuccess = false;
 
-                    List<ProfileEntity> listOfAllProfiles =
-                        ref.read(profileProvider).listOfAllProfiles;
-
-                    for (ProfileEntity p in listOfAllProfiles) {
-                      debug(p.email);
-                      if (p.email?.toLowerCase() ==
-                          emailTEC.text.trim().toLowerCase()) {
-                        BotToast.showText(text: "Email already in use");
+                      if (emailTEC.text.trim().toLowerCase() ==
+                          sharedPreferenceManager.getValue(
+                              key: SharedPreferenceKeys.USER_EMAIL)) {
+                        ref
+                            .read(profileProvider.notifier)
+                            .toggleProfileEdit("email");
                         return;
                       }
-                    }
 
-                    if (profileController.profileEntity != null) {
-                      ProfileEntity updatedProfile =
-                          profileController.profileEntity!;
-                      updatedProfile.email = emailTEC.text.trim();
-                      isSuccess = await ref
-                          .read(authProvider.notifier)
-                          .changeEmail(email: updatedProfile.email!);
+                      List<ProfileEntity> listOfAllProfiles =
+                          ref.read(profileProvider).listOfAllProfiles;
 
-                      if (isSuccess) {
-                        showDialog<void>(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              content: const SingleChildScrollView(
-                                  child: Column(
-                                children: [
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: Colors.green,
-                                    size: 50,
-                                  ),
-                                  SizedBox(
-                                    height: 10,
-                                  ),
-                                  Text(
-                                    "A verification email has been sent to your new email. please verify the email from the link.",
-                                    textAlign: TextAlign.center,
+                      for (ProfileEntity p in listOfAllProfiles) {
+                        debug(p.email);
+                        if (p.email?.toLowerCase() ==
+                            emailTEC.text.trim().toLowerCase()) {
+                          BotToast.showText(text: "Email already in use");
+                          return;
+                        }
+                      }
+
+                      if (profileController.profileEntity != null) {
+                        ProfileEntity updatedProfile =
+                            profileController.profileEntity!;
+                        updatedProfile.email = emailTEC.text.trim();
+                        isSuccess = await ref
+                            .read(authProvider.notifier)
+                            .changeEmail(email: updatedProfile.email!);
+
+                        if (isSuccess) {
+                          showDialog<void>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                content: const SingleChildScrollView(
+                                    child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                      size: 50,
+                                    ),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                    Text(
+                                      "A verification email has been sent to your new email. please verify the email from the link.",
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                )),
+                                actions: [
+                                  TextButton(
+                                    child: const Text('Ok'),
+                                    onPressed: () async {
+                                      await ref
+                                          .read(logoutProvider.notifier)
+                                          .logout();
+                                      ref
+                                          .read(goRouterProvider)
+                                          .go(AuthScreen.setRoute());
+                                    },
                                   ),
                                 ],
-                              )),
-                              actions: [
-                                TextButton(
-                                  child: const Text('Ok'),
-                                  onPressed: () async {
-                                    await ref
-                                        .read(logoutProvider.notifier)
-                                        .logout();
-                                    ref
-                                        .read(goRouterProvider)
-                                        .go(AuthScreen.setRoute());
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
+                              );
+                            },
+                          );
+                        }
                       }
-                    }
-                    ref
-                        .read(profileProvider.notifier)
-                        .toggleProfileEdit("email");
-                  },
-                  icon: const Icon(
-                    Icons.check,
+                      ref
+                          .read(profileProvider.notifier)
+                          .toggleProfileEdit("email");
+                    },
+                    icon: const Icon(
+                      Icons.check,
+                    ),
                   ),
                 )
               ],
@@ -360,28 +393,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Display name",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    Text(
-                      "${profileController.profileEntity?.name}",
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
+                Flexible(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Display name",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Text("${profileController.profileEntity?.name}",
+                          style: Theme.of(context).textTheme.titleLarge,
+                          overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  onPressed: () async {
-                    nameTEC.text = profileController.profileEntity?.name ?? "";
-                    ref
-                        .read(profileProvider.notifier)
-                        .toggleProfileEdit("name");
-                  },
-                  icon: const Icon(
-                    Icons.edit,
+                Flexible(
+                  flex: 1,
+                  child: IconButton(
+                    onPressed: () async {
+                      nameTEC.text =
+                          profileController.profileEntity?.name ?? "";
+                      ref
+                          .read(profileProvider.notifier)
+                          .toggleProfileEdit("name");
+                    },
+                    icon: const Icon(
+                      Icons.edit,
+                    ),
                   ),
                 )
               ],
@@ -389,11 +428,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           : Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
+                Flexible(
+                  flex: 4,
                   child: TextFormField(
                     controller: nameTEC,
                     maxLines: null,
                     decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
                       fillColor: Theme.of(context)
                           .colorScheme
@@ -407,25 +448,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  onPressed: () async {
-                    if (profileController.profileEntity != null) {
-                      ProfileEntity updatedProfile =
-                          profileController.profileEntity!;
-                      updatedProfile.name = nameTEC.text.trim();
+                Flexible(
+                  flex: 1,
+                  child: IconButton(
+                    onPressed: () async {
+                      if (profileController.profileEntity != null) {
+                        ProfileEntity updatedProfile =
+                            profileController.profileEntity!;
+                        updatedProfile.name = nameTEC.text.trim();
+                        ref
+                            .read(profileProvider.notifier)
+                            .updateProfile(updatedProfile);
+                        ref
+                            .read(profileProvider.notifier)
+                            .readProfile(updatedProfile.uid ?? "");
+                      }
                       ref
                           .read(profileProvider.notifier)
-                          .updateProfile(updatedProfile);
-                      ref
-                          .read(profileProvider.notifier)
-                          .readProfile(updatedProfile.uid ?? "");
-                    }
-                    ref
-                        .read(profileProvider.notifier)
-                        .toggleProfileEdit("name");
-                  },
-                  icon: const Icon(
-                    Icons.check,
+                          .toggleProfileEdit("name");
+                    },
+                    icon: const Icon(
+                      Icons.check,
+                    ),
                   ),
                 )
               ],
@@ -450,13 +494,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     Icons.person,
                     size: context.width * 0.1,
                   ),
-                  fit: BoxFit.fill,
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
             Positioned(
               bottom: 0,
-              right: 0,
+              right: context.width / 4,
               child: IconButton(
                 onPressed: () async {
                   _showOptions(context, profileController);
@@ -474,6 +518,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         Text(
           "${profileController.profileEntity?.name}",
           style: Theme.of(context).textTheme.headlineSmall,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

@@ -42,8 +42,9 @@ final goRouterProvider = Provider(
           path: ProfileScreen.route,
           builder: (context, state) {
             debug("path parameter : ${state.pathParameters}");
+            ProfileEntity profileEntity = state.extra as ProfileEntity;
             return ProfileScreen(
-              data: state.pathParameters["profile_entity"] ?? "",
+              data: profileEntity,
             );
           },
         ),

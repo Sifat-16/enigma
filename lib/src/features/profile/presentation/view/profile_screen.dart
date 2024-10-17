@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:enigma/src/core/database/local/shared_preference/shared_preference_manager.dart';
 import 'package:enigma/src/core/router/router.dart';
@@ -15,11 +13,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ProfileScreen extends ConsumerStatefulWidget {
   ProfileScreen({super.key, required this.data});
 
-  static const String route = "/profile/:profile_entity";
-  String data;
+  static const String route = "/profile";
+  ProfileEntity data;
 
-  static setRoute({required ProfileEntity profileEntity}) =>
-      "/profile/${jsonEncode(profileEntity.toJson())}";
+  static setRoute() => "/profile";
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -30,8 +27,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget build(BuildContext context) {
     ProfileGeneric profileController = ref.watch(profileProvider);
-    final ProfileEntity profileEntity =
-        ProfileEntity.fromJson(jsonDecode(widget.data));
+    final ProfileEntity profileEntity = widget.data;
     return Scaffold(
       appBar: SharedAppbar(
         leadingWidget: InkWell(
@@ -57,15 +53,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         title: const Text("Profile"),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: buildImageSection(context, profileEntity),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: buildImageSection(context, profileEntity),
+              ),
+              const SizedBox(
+                height: 40,
+              ),
+              Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -79,9 +78,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   buildPhoneNumberSection(context, profileEntity),
                 ],
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -105,6 +104,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   "${profileEntity.phoneNumber ?? "-"}",
                   style: Theme.of(context).textTheme.titleLarge,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -129,6 +129,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   profileEntity.email ?? "-",
                   style: Theme.of(context).textTheme.titleLarge,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -154,6 +155,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   "${profileEntity.name ?? "-"}",
                   style: Theme.of(context).textTheme.titleLarge,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -164,20 +166,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget buildImageSection(BuildContext context, ProfileEntity profileEntity) {
     return Column(
       children: [
-        Container(
-          height: context.width * 0.4,
-          width: context.width * 0.4,
-          child: Align(
-            alignment: Alignment.center,
-            child: ClipOval(
-              child: CachedNetworkImage(
-                imageUrl: profileEntity.avatarUrl ?? "",
-                errorWidget: (context, url, error) => Icon(
-                  Icons.person,
-                  size: context.width * 0.1,
-                ),
-                fit: BoxFit.contain,
+        Align(
+          alignment: Alignment.center,
+          child: ClipOval(
+            child: CachedNetworkImage(
+              height: context.width * 0.4,
+              width: context.width * 0.4,
+              imageUrl: profileEntity.avatarUrl ?? "",
+              errorWidget: (context, url, error) => Icon(
+                Icons.person,
+                size: context.width * 0.1,
               ),
+              fit: BoxFit.contain,
             ),
           ),
         ),
@@ -187,6 +187,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         Text(
           "${profileEntity.name}",
           style: Theme.of(context).textTheme.headlineSmall,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );
