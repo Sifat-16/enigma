@@ -1,6 +1,6 @@
 
 # Enigma
-This application provides a seamless chat experience with support for voice and video calls, making communication easier and more interactive. Special thanks to core contributors [Farhan Hasan](https://github.com/farhan-hasan) and [Nayem Ali](https://github.com/Nayem-Ali).
+This application provides a seamless chat experience with support for voice and video calls, making communication easier and more interactive.
 
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=for-the-badge&logo=dart&logoColor=white)
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
@@ -12,17 +12,16 @@ This application provides a seamless chat experience with support for voice and 
 
 ## Features
 
-- User Authentication: Sign up and log in securely.
-- Chat Request: Decide who want to communicate by sending and recieving chat requests.
-- Barcode Scanning: Easily send chat requests by scanning the barcode of your friends QR code.
-- Real-time Chat: Send and receive messages, audio messages, images instantly.
-- Voice Calls: Connect with friends, family, or colleagues via voice calls.
-- Video Calls: Enable face-to-face communication using video calls.
-- Call and Chat Notifications: Receive real-time notifications for calls and chats across foreground, background, and terminated app states, ensuring no missed updates.
-- Stories: Share your day with uploading stories.
-- Push Notifications: Get notified of incoming messages and calls.
-- Profile Management: Manage user profiles.
-- Theme Mode: Switch between Dark and Light mode.
+* User Authentication: Sign up and log in securely.
+* Chat Request: Decide who want to communicate by sending and recieving chat requests.
+* Barcode Scanning: Easily send chat requests by scanning the barcode of your friends QR code.
+* Real-time Chat: Send and receive messages, audio messages, images instantly.
+* Voice Calls: Connect with friends, family, or colleagues via voice calls.
+* Video Calls: Enable face-to-face communication using video calls.
+* Call and Chat Notifications: Receive real-time notifications for calls and chats across foreground, background, and terminated app states, ensuring no missed updates.
+* Stories: Share your day with uploading stories.
+* Profile Management: Manage user profiles.
+* Theme Mode: Switch between Dark and Light mode.
 
 ## Technology
 1. Dart as the source language
@@ -32,10 +31,15 @@ This application provides a seamless chat experience with support for voice and 
 5. Python and FastAPI for Backend Services
 
 ## Highlights
-- Codebase follows **MVVM** and **Clean Architecture**
-- Routing management using **GoRouter**
-- Local Databases used (**Sembast**, **Shared Preferences**)
-- **Deeplink** implemented for chats and calls in Foreground, Background and Terminated state.
+* Codebase follows **MVVM** and **Clean Architecture**
+* Routing management using **GoRouter**
+* Local Databases used (**Sembast**, **Shared Preferences**)
+* **Barcode scanner** for sending chat requests
+* **Deeplink** implemented for chats and calls in Foreground, Background and Terminated state to automatically navigate to a specific screen.
+* Real-Time-Communication:
+    * Implemented the **Agora RTC** for voice calls and video calls.
+    * Built a backend service using **FastAPI** to generate unique token for voice and video call.
+    * Utilized the hardware's call module by using **Flutter Callkit Incoming** to send and recieve call notifications.
 
 ## Demo
 Coming soon...

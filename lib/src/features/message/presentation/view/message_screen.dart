@@ -72,21 +72,21 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         //backgroundColor: Theme.of(context).colorScheme.secondary,
         appBar: SharedAppbar(
             title: const Text("Home"),
-            leadingWidget: GestureDetector(
-              onTap: () {},
-              child: Container(
-                height: context.height * .05,
-                width: context.width * .05,
-                margin: const EdgeInsets.all(8),
-                child: GestureDetector(
-                  onTap: () {},
-                  child: const Icon(
-                    Icons.search,
-                    size: 25,
-                  ),
-                ),
-              ),
-            ),
+            // leadingWidget: GestureDetector(
+            //   onTap: () {},
+            //   child: Container(
+            //     height: context.height * .05,
+            //     width: context.width * .05,
+            //     margin: const EdgeInsets.all(8),
+            //     child: GestureDetector(
+            //       onTap: () {},
+            //       child: const Icon(
+            //         Icons.search,
+            //         size: 25,
+            //       ),
+            //     ),
+            //   ),
+            // ),
             trailingWidgets: [
               GestureDetector(
                 onTap: () {

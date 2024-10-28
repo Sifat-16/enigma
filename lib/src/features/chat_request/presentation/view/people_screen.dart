@@ -1,9 +1,10 @@
 import 'dart:convert';
 
-import 'package:enigma/src/core/barcode/barcode_scanner.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:enigma/src/core/network/remote/firebase/firebase_handler.dart';
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/extension/context_extension.dart';
+import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/chat_request/presentation/view/friends_screen.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_controller.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_generic.dart';
@@ -14,6 +15,7 @@ import 'package:enigma/src/shared/widgets/circular_display_picture.dart';
 import 'package:enigma/src/shared/widgets/shared_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_code_dart_scan/qr_code_dart_scan.dart';
 
 class PeopleScreen extends ConsumerStatefulWidget {
   PeopleScreen({super.key, required this.data});
@@ -61,71 +63,59 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
     return Scaffold(
       appBar: SharedAppbar(
           title: Text("People"),
-          leadingWidget: GestureDetector(
-            onTap: () {},
-            child: const Icon(
-              Icons.search,
-              size: 25,
-            ),
-          ),
+          // leadingWidget: GestureDetector(
+          //   onTap: () {},
+          //   child: const Icon(
+          //     Icons.search,
+          //     size: 25,
+          //   ),
+          // ),
           trailingWidgets: [
             GestureDetector(
-              // TODO: UNCOMMENT LATWEER
-              // onTap: () async {
-              //   ProfileEntity profileEntity;
-              //   String scanDetails;
-              //
-              //   // scanDetails = await BarcodeScanner.scanBarcodeNormal();
-              //   // profileEntity = ProfileEntity.fromJson(jsonDecode(scanDetails));
-              //
-              //   showDialog<void>(
-              //     context: context,
-              //     builder: (BuildContext context) {
-              //       return AlertDialog(
-              //         title: const Text('Send Chat Request'),
-              //         content: SingleChildScrollView(
-              //             child: Container(
-              //           child: Column(
-              //             children: [
-              //               CircularDisplayPicture(
-              //                 radius: 23,
-              //                 imageURL: profileEntity.avatarUrl,
-              //               ),
-              //               const SizedBox(
-              //                 height: 10,
-              //               ),
-              //               Text(
-              //                 profileEntity.name ?? "",
-              //                 style: Theme.of(context).textTheme.titleLarge,
-              //               ),
-              //               const SizedBox(
-              //                 height: 10,
-              //               ),
-              //               Text("Send chat request?"),
-              //             ],
-              //           ),
-              //         )),
-              //         actions: <Widget>[
-              //           TextButton(
-              //             child: const Text('Yes'),
-              //             onPressed: () {
-              //               ref
-              //                   .read(chatRequestProvider.notifier)
-              //                   .sendChatRequest(profileEntity);
-              //               ref.read(goRouterProvider).pop();
-              //             },
-              //           ),
-              //           TextButton(
-              //             child: const Text('No'),
-              //             onPressed: () {
-              //               ref.read(goRouterProvider).pop();
-              //             },
-              //           ),
-              //         ],
-              //       );
-              //     },
-              //   );
-              // },
+              onTap: () async {
+                ProfileEntity profileEntity;
+                String scanDetails = "";
+                // // Simple Barcode Scanner Package
+                // var res = await Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) => const SimpleBarcodeScannerPage(),
+                //     ));
+                // if (res is String) {
+                //   scanDetails = res;
+                //   profileEntity =
+                //       ProfileEntity.fromJson(jsonDecode(scanDetails));
+                //   debug(profileEntity.name);
+                //   showSendChatRequestDialog(profileEntity, profileController);
+                // }
+                showDialog<void>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                        title: const Text('Scan QR Code'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            QRCodeDartScanView(
+                              typeScan: TypeScan.live,
+                              formats: const [
+                                BarcodeFormat.qrCode,
+                              ],
+                              onCapture: (Result result) {
+                                scanDetails = result.text;
+                                profileEntity = ProfileEntity.fromJson(
+                                    jsonDecode(scanDetails));
+                                debug(profileEntity.name);
+                                ref.read(goRouterProvider).pop();
+                                showSendChatRequestDialog(
+                                    profileEntity, profileController);
+                              },
+                            ),
+                          ],
+                        ));
+                  },
+                );
+              },
               child: Container(
                 width: context.width * .1,
                 height: context.width * .1,
@@ -166,6 +156,63 @@ class _PeopleScreenState extends ConsumerState<PeopleScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  showSendChatRequestDialog(
+      ProfileEntity profileEntity, ProfileGeneric profileController) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Send Chat Request'),
+          content: SingleChildScrollView(
+              child: Container(
+            child: Column(
+              children: [
+                CircularDisplayPicture(
+                  radius: 23,
+                  imageURL: profileEntity.avatarUrl,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Text(
+                  profileEntity.name ?? "",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
+                Text("Send chat request?"),
+              ],
+            ),
+          )),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Yes'),
+              onPressed: () {
+                if (profileController.listOfFriends
+                    .any((p) => p.uid == profileEntity.uid)) {
+                  BotToast.showText(text: "User is already your friend");
+                  ref.read(goRouterProvider).pop();
+                  return;
+                }
+                ref
+                    .read(chatRequestProvider.notifier)
+                    .sendChatRequest(profileEntity);
+                ref.read(goRouterProvider).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('No'),
+              onPressed: () {
+                ref.read(goRouterProvider).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 

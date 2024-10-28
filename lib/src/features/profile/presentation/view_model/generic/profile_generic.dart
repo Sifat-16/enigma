@@ -2,6 +2,7 @@ import 'package:enigma/src/features/profile/domain/entity/profile_entity.dart';
 
 class ProfileGeneric {
   bool isLoading;
+  bool isLightMode;
   bool nameEditInProgress;
   bool emailEditInProgress;
   bool phoneNumberEditInProgress;
@@ -12,6 +13,7 @@ class ProfileGeneric {
 
   ProfileGeneric({
     this.isLoading = false,
+    this.isLightMode = false,
     this.nameEditInProgress = false,
     this.emailEditInProgress = false,
     this.phoneNumberEditInProgress = false,
@@ -23,6 +25,7 @@ class ProfileGeneric {
 
   ProfileGeneric update({
     bool? isLoading,
+    bool? isLightMode,
     bool? nameEditInProgress,
     bool? emailEditInProgress,
     bool? phoneNumberEditInProgress,
@@ -33,6 +36,7 @@ class ProfileGeneric {
   }) {
     return ProfileGeneric(
         isLoading: isLoading ?? this.isLoading,
+        isLightMode: isLightMode ?? this.isLightMode,
         nameEditInProgress: nameEditInProgress ?? this.nameEditInProgress,
         emailEditInProgress: emailEditInProgress ?? this.emailEditInProgress,
         phoneNumberEditInProgress:

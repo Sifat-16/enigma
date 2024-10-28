@@ -1,10 +1,12 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dartz/dartz.dart';
+import 'package:enigma/src/core/database/local/shared_preference/shared_preference_keys.dart';
+import 'package:enigma/src/core/database/local/shared_preference/shared_preference_manager.dart';
 import 'package:enigma/src/core/network/remote/firebase/firebase_handler.dart';
 import 'package:enigma/src/core/network/remote/firebase/model/firebase_where_model.dart';
 import 'package:enigma/src/core/network/responses/failure_response.dart';
 import 'package:enigma/src/core/router/router.dart';
-import 'package:enigma/src/features/auth/presentation/auth_screen/view/auth_screen.dart';
+import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/auth/presentation/login/view/login_screen.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_controller.dart';
 import 'package:enigma/src/features/profile/domain/dto/filter_dto.dart';
@@ -26,6 +28,8 @@ final profileProvider =
 class ProfileController extends StateNotifier<ProfileGeneric> {
   ProfileController(this.ref) : super(ProfileGeneric());
   Ref ref;
+  SharedPreferenceManager sharedPreferenceManager =
+      sl.get<SharedPreferenceManager>();
 
   CreateProfileUseCase createProfileUseCase = sl.get<CreateProfileUseCase>();
   ReadProfileUseCase readProfileUseCase = sl.get<ReadProfileUseCase>();
@@ -176,5 +180,16 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
           break;
         }
     }
+  }
+
+  toggleThemeMode({required bool isLightMode}) {
+    state = state.update(isLightMode: isLightMode);
+  }
+
+  getInitialThemeMode() {
+    bool isLightMode = sharedPreferenceManager.getValue(
+        key: SharedPreferenceKeys.IS_LIGHT_MODE);
+    state = state.update(isLightMode: isLightMode);
+    debug("in controller $isLightMode");
   }
 }

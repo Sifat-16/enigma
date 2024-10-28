@@ -10,6 +10,7 @@ import 'package:enigma/src/core/network/remote/firebase/firebase_storage_directo
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/extension/context_extension.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
+import 'package:enigma/src/core/utils/restart_widget/restart_widget.dart';
 import 'package:enigma/src/features/auth/presentation/auth_screen/view/auth_screen.dart';
 import 'package:enigma/src/features/auth/presentation/auth_screen/view_model/auth_controller.dart';
 import 'package:enigma/src/features/auth/presentation/logout/view_model/logout_controller.dart';
@@ -41,6 +42,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   TextEditingController nameTEC = TextEditingController();
   TextEditingController emailTEC = TextEditingController();
   TextEditingController phoneNumberTEC = TextEditingController();
+  bool isLightMode = false;
 
   @override
   void initState() {
@@ -57,7 +59,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return Scaffold(
       appBar: SharedAppbar(
           leadingWidget: GestureDetector(
-            onTap: () {
+            onTap: () async {
               showDialog<void>(
                 context: context,
                 builder: (BuildContext context) {
@@ -83,6 +85,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           title: const Text("Settings"),
           trailingWidgets: [
+            GestureDetector(
+              onTap: () async {
+                await ref.read(profileProvider.notifier).toggleThemeMode(
+                    isLightMode: !profileController.isLightMode);
+                debug("light mode set : ${!profileController.isLightMode}");
+                sharedPreferenceManager.insertValue(
+                    key: SharedPreferenceKeys.IS_LIGHT_MODE,
+                    data: !profileController.isLightMode);
+                RestartWidget.restartApp(context);
+              },
+              child: Container(
+                width: context.width * .1,
+                height: context.width * .1,
+                margin: const EdgeInsets.all(8),
+                child: Icon(
+                  profileController.isLightMode
+                      ? Icons.light_mode_outlined
+                      : Icons.dark_mode_outlined,
+                  size: 25,
+                ),
+              ),
+            ),
             GestureDetector(
               onTap: () async {
                 bool isSuccess = false;
