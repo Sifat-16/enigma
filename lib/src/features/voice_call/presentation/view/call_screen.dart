@@ -17,6 +17,7 @@ class CallScreen extends ConsumerStatefulWidget {
   /// Construct the [JoinChannelVideo]
   const CallScreen(
       {super.key, required this.callModel, required this.isCalling});
+
   final bool isCalling;
   final CallModel callModel;
   static const String route = "/call";
@@ -90,23 +91,24 @@ class _State extends ConsumerState<CallScreen> {
                       //   AudioCallInterface(callModel: widget.callModel)
                       // else
                       /// Local Video View
-                      Align(
-                        alignment: Alignment.topLeft,
-                        child: SizedBox(
-                          width: 100,
-                          height: 150,
-                          child: Center(
-                            child: call.isJoined
-                                ? AgoraVideoView(
-                                    controller: VideoViewController(
-                                      rtcEngine: call.engine!,
-                                      canvas: const VideoCanvas(uid: 0),
-                                    ),
-                                  )
-                                : const CircularProgressIndicator(),
+                      if (call.muteCamera)
+                        Align(
+                          alignment: Alignment.topLeft,
+                          child: SizedBox(
+                            width: 100,
+                            height: 150,
+                            child: Center(
+                              child: call.isJoined
+                                  ? AgoraVideoView(
+                                      controller: VideoViewController(
+                                        rtcEngine: call.engine!,
+                                        canvas: const VideoCanvas(uid: 0),
+                                      ),
+                                    )
+                                  : const CircularProgressIndicator(),
+                            ),
                           ),
                         ),
-                      ),
                       Padding(
                         padding: const EdgeInsets.all(15.0),
                         child: Align(
@@ -166,13 +168,12 @@ class _State extends ConsumerState<CallScreen> {
                                       .read(callProvider.notifier)
                                       .sendCallEndNotification(
                                           callModel: widget.callModel);
-                                  if(widget.isCalling) {
+                                  if (widget.isCalling) {
                                     container.read(goRouterProvider).pop();
+                                  } else {
+                                    ref.read(callStateProvider.notifier).state =
+                                        CallState.ended;
                                   }
-                                   else {
-                                    ref.read(callStateProvider.notifier).state = CallState.ended;
-                                  }
-
                                 },
                                 child: const Icon(
                                   Icons.call_end,
@@ -209,16 +210,32 @@ class _State extends ConsumerState<CallScreen> {
     /// Remote Video View
     if (call.remoteIdJoined != null && !call.muteAllRemoteVideo) {
       return SafeArea(
-        child: AgoraVideoView(
-          controller: VideoViewController.remote(
-            rtcEngine: call.engine!,
-            canvas: VideoCanvas(uid: call.remoteIdJoined),
-            connection: RtcConnection(channelId: widget.callModel.channelId),
-          ),
+        child: Stack(
+          children: [
+
+            AgoraVideoView(
+              controller: VideoViewController.remote(
+                rtcEngine: call.engine!,
+                canvas: VideoCanvas(uid: call.remoteIdJoined),
+                connection:
+                    RtcConnection(channelId: widget.callModel.channelId),
+              ),
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Text(
+                "${call.totalSeconds}",
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ),
+          ],
         ),
       );
     } else {
-      return AudioCallInterface(callModel: callModel);
+      return AudioCallInterface(
+        callModel: callModel,
+        isCalling: widget.isCalling,
+      );
     }
   }
 }

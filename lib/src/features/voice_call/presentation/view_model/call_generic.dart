@@ -13,6 +13,7 @@ class CallGeneric {
 
   int? remoteIdJoined;
   int? localUidJoined;
+  int? totalSeconds;
 
   // AgoraClient? agoraClient;
 
@@ -27,21 +28,23 @@ class CallGeneric {
       this.remoteIdJoined,
       this.localUidJoined,
       //this.agoraClient,
-      this.engine});
+      this.engine,
+      this.totalSeconds});
 
-  CallGeneric update(
-      {bool? isJoined,
-      bool? switchCamera,
-      bool? switchRender,
-      bool? openCamera,
-      bool? muteCamera,
-      bool? muteAllRemoteVideo,
-      bool? muteVoice,
-      RtcEngine? engine,
-      int? remoteIdJoined,
-      int? localUidJoined
-      //AgoraClient? agoraClient
-      }) {
+  CallGeneric update({
+    bool? isJoined,
+    bool? switchCamera,
+    bool? switchRender,
+    bool? openCamera,
+    bool? muteCamera,
+    bool? muteAllRemoteVideo,
+    bool? muteVoice,
+    RtcEngine? engine,
+    int? remoteIdJoined,
+    int? localUidJoined,
+    int? totalSeconds,
+    //AgoraClient? agoraClient
+  }) {
     return CallGeneric(
       isJoined: isJoined ?? this.isJoined,
       switchCamera: switchCamera ?? this.switchCamera,
@@ -53,7 +56,7 @@ class CallGeneric {
       engine: engine ?? this.engine,
       remoteIdJoined: remoteIdJoined ?? this.remoteIdJoined,
       localUidJoined: localUidJoined ?? this.localUidJoined,
-
+      totalSeconds: totalSeconds ?? this.totalSeconds,
       //agoraClient: agoraClient ?? this.agoraClient
     );
   }

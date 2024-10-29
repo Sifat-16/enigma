@@ -1,9 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
 import 'package:flutter/material.dart';
+
 class AudioCallInterface extends StatefulWidget {
-  const AudioCallInterface({super.key, required this.callModel});
+  const AudioCallInterface({
+    super.key,
+    required this.callModel,
+    required this.isCalling,
+  });
+
   final CallModel callModel;
+  final bool isCalling;
+
   @override
   State<AudioCallInterface> createState() => _AudioCallInterfaceState();
 }
@@ -24,17 +32,25 @@ class _AudioCallInterfaceState extends State<AudioCallInterface> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(100),
               child: CachedNetworkImage(
-                imageUrl: widget.callModel.receiverAvatar ?? "",
+                imageUrl: widget.isCalling
+                    ? widget.callModel.receiverAvatar ?? ""
+                    : widget.callModel.senderAvatar ?? "",
                 fit: BoxFit.cover,
-                errorWidget: (context, url, error) =>
-                const Icon(Icons.person),
+                errorWidget: (context, url, error) => const Icon(Icons.person),
               ),
             ),
           ),
+          if(widget.isCalling)
           Text(
             "${widget.callModel.receiverName}",
             textAlign: TextAlign.center,
-          ),
+          )
+          else
+            Text(
+              "${widget.callModel.senderName}",
+              textAlign: TextAlign.center,
+            )
+
         ],
       ),
     );

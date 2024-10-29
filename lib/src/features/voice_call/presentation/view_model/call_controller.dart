@@ -1,9 +1,10 @@
 import 'dart:convert';
-
+import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:enigma/src/core/database/local/shared_preference/shared_preference_keys.dart';
 import 'package:enigma/src/core/database/local/shared_preference/shared_preference_manager.dart';
 import 'package:enigma/src/core/router/router.dart';
+
 // import 'package:agora_uikit/agora_uikit.dart';
 import 'package:enigma/src/core/rtc/rtc_config.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
@@ -26,7 +27,9 @@ final callProvider =
 class CallController extends StateNotifier<CallGeneric> {
   CallController(this.ref) : super(CallGeneric());
   Ref ref;
-  SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
+  Timer? timer;
+  SharedPreferenceManager sharedPreferenceManager =
+      sl.get<SharedPreferenceManager>();
 
   SendPushMessageUsecase sendPushMessageUsecase = SendPushMessageUsecase();
 
@@ -90,6 +93,7 @@ class CallController extends StateNotifier<CallGeneric> {
             '[onUserJoined] connection: ${connection.toJson()} remoteUid: $rUid elapsed: $elapsed');
 
         state = state.update(remoteIdJoined: rUid);
+        startTimer();
       },
       onUserOffline:
           (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
@@ -97,6 +101,7 @@ class CallController extends StateNotifier<CallGeneric> {
             '[onUserOffline] connection: ${connection.toJson()}  rUid: $rUid reason: $reason');
         // leaveChannel();
         state = state.update(remoteIdJoined: null);
+
       },
       onLeaveChannel: (RtcConnection connection, RtcStats stats) {
         debug(
@@ -104,13 +109,14 @@ class CallController extends StateNotifier<CallGeneric> {
         // state = state.update(remoteIdJoined: null);
         // rootNavigatorKey.currentContext!.pop();
         state = state.update(isJoined: false);
+        if(timer != null) cancelTimer();
       },
       onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid,
           RemoteVideoState stat, RemoteVideoStateReason reason, int elapsed) {
-        print("Remote Video Camera State:${stat.name}");
-        print("Remote video state reason: ${reason.name}");
-        print("Remote video state elapse: ${elapsed}");
-        if(stat == RemoteVideoState.remoteVideoStateDecoding){
+        // print("Remote Video Camera State:${stat.name}");
+        // print("Remote video state reason: ${reason.name}");
+        // print("Remote video state elapse: ${elapsed}");
+        if (stat == RemoteVideoState.remoteVideoStateStopped) {
           state = state.update(muteAllRemoteVideo: true);
         } else {
           state = state.update(muteAllRemoteVideo: false);
@@ -228,49 +234,16 @@ class CallController extends StateNotifier<CallGeneric> {
             ),
           ],
         );
-        // return Consumer(
-        //   builder: (context, rf, child) {
-        //     final controller = rf.watch(callProvider);
-        //     return controller.isJoined
-        //         ? AlertDialog(
-        //             title: const Text("Incoming Call"),
-        //             actions: [
-        //               TextButton(
-        //                   onPressed: () {
-        //                     CallModel callModel = CallModel.fromJson(
-        //                       jsonDecode(pushBodyModel.body),
-        //                     );
-        //
-        //                     context.pop();
-        //                     Navigator.push(
-        //                       context,
-        //                       MaterialPageRoute(
-        //                         builder: (context) => CallScreen(
-        //                             callModel: callModel, isCalling: false),
-        //                       ),
-        //                     );
-        //                   },
-        //                   child: const Text("Accept")),
-        //               TextButton(
-        //                 onPressed: () {
-        //                   context.pop();
-        //                 },
-        //                 child: const Text("Decline"),
-        //               ),
-        //             ],
-        //           )
-        //         : const SizedBox();
-        //   },
-        // );
       },
     );
   }
 
   sendCallEndNotification({required CallModel callModel}) {
     print("${callModel.receiverName}- ${callModel.receiverToken}");
-    String userUid = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
+    String userUid =
+        sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
     try {
-      if(callModel.senderUid == userUid) {
+      if (callModel.senderUid == userUid) {
         print("sending to receiver");
         sendPushMessageUsecase.call(FCMDto(
             recipientToken: callModel.receiverToken ?? "",
@@ -289,8 +262,22 @@ class CallController extends StateNotifier<CallGeneric> {
                 type: "call_end", body: jsonEncode(callModel.toJson())),
             imageUrl: ""));
       }
-    }catch(e) {
+    } catch (e) {
       print(e);
     }
+  }
+
+  startTimer() {
+    int callDuration = 0;
+    timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (time) {
+        callDuration++;
+        state = state.update(totalSeconds: callDuration);
+      },
+    );
+  }
+  cancelTimer(){
+    timer?.cancel();
   }
 }
