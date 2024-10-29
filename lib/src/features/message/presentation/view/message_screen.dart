@@ -72,21 +72,21 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         //backgroundColor: Theme.of(context).colorScheme.secondary,
         appBar: SharedAppbar(
             title: const Text("Home"),
-            leadingWidget: GestureDetector(
-              onTap: () {},
-              child: Container(
-                height: context.height * .05,
-                width: context.width * .05,
-                margin: const EdgeInsets.all(8),
-                child: GestureDetector(
-                  onTap: () {},
-                  child: const Icon(
-                    Icons.search,
-                    size: 25,
-                  ),
-                ),
-              ),
-            ),
+            // leadingWidget: GestureDetector(
+            //   onTap: () {},
+            //   child: Container(
+            //     height: context.height * .05,
+            //     width: context.width * .05,
+            //     margin: const EdgeInsets.all(8),
+            //     child: GestureDetector(
+            //       onTap: () {},
+            //       child: const Icon(
+            //         Icons.search,
+            //         size: 25,
+            //       ),
+            //     ),
+            //   ),
+            // ),
             trailingWidgets: [
               GestureDetector(
                 onTap: () {
@@ -262,11 +262,11 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 onTap: () async {
                   ref.read(goRouterProvider).push(StoryScreen.setRoute(-1));
                 },
-                icon: Icons.image,
+                icon: Icons.history,
               ),
             filesOption(
               title: "Camera",
-              subtitle: "Share a picture",
+              subtitle: "Take a picture",
               onTap: () async {
                 imageFile = await ChatUtils.pickImage(
                   imageSource: ImageSource.camera,
@@ -283,10 +283,22 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
               icon: Icons.camera,
             ),
             filesOption(
-              title: "Video",
-              subtitle: "Share a video clip",
-              onTap: () {},
-              icon: Icons.video_camera_front_outlined,
+              title: "Gallery",
+              subtitle: "Select a picture",
+              onTap: () async {
+                imageFile = await ChatUtils.pickImage(
+                  imageSource: ImageSource.gallery,
+                );
+
+                if (imageFile != null) {
+                  ref
+                      .read(goRouterProvider)
+                      .push(StoryPreviewScreen.route, extra: imageFile);
+                }
+
+                debug(imageFile?.path ?? "");
+              },
+              icon: Icons.image,
             ),
           ],
         );
