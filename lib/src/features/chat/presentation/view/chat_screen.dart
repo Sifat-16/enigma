@@ -77,17 +77,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         builder: (context) => CallScreen(
                               isCalling: true,
                               callModel: CallModel(
-                                channelId: "${userUid}${profileEntity.uid}",
-                                uid: 0,
-                                senderName: user.profileEntity?.name,
-                                senderAvatar: user.profileEntity?.avatarUrl,
-                                senderUid: user.profileEntity?.uid,
-                                receiverName: profileEntity.name,
-                                receiverAvatar: profileEntity.avatarUrl,
-                                senderToken: user.profileEntity?.deviceToken,
-                                receiverUid: profileEntity.uid,
-                                receiverToken: profileEntity.deviceToken,
-                              ),
+                                  channelId: "${userUid}${profileEntity.uid}",
+                                  uid: 0,
+                                  senderName: user.profileEntity?.name,
+                                  senderAvatar: user.profileEntity?.avatarUrl,
+                                  senderUid: user.profileEntity?.uid,
+                                  receiverName: profileEntity.name,
+                                  receiverAvatar: profileEntity.avatarUrl,
+                                  senderToken: user.profileEntity?.deviceToken,
+                                  receiverUid: profileEntity.uid,
+                                  receiverToken: profileEntity.deviceToken,
+                                  callType: "voice"),
                             )));
               },
               child: Container(
@@ -101,7 +101,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () {
+              onTap: () async {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -118,6 +118,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                 senderToken: user.profileEntity?.deviceToken,
                                 receiverAvatar: profileEntity.avatarUrl,
                                 receiverUid: profileEntity.uid,
+                                callType: "video",
                               ),
                             )));
               },

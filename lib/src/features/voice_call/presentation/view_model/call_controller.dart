@@ -26,7 +26,8 @@ final callProvider =
 class CallController extends StateNotifier<CallGeneric> {
   CallController(this.ref) : super(CallGeneric());
   Ref ref;
-  SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
+  SharedPreferenceManager sharedPreferenceManager =
+      sl.get<SharedPreferenceManager>();
 
   SendPushMessageUsecase sendPushMessageUsecase = SendPushMessageUsecase();
 
@@ -110,7 +111,7 @@ class CallController extends StateNotifier<CallGeneric> {
         print("Remote Video Camera State:${stat.name}");
         print("Remote video state reason: ${reason.name}");
         print("Remote video state elapse: ${elapsed}");
-        if(stat == RemoteVideoState.remoteVideoStateDecoding){
+        if (stat == RemoteVideoState.remoteVideoStateStopped) {
           state = state.update(muteAllRemoteVideo: true);
         } else {
           state = state.update(muteAllRemoteVideo: false);
@@ -179,7 +180,6 @@ class CallController extends StateNotifier<CallGeneric> {
 
   muteLocalVideoStream() async {
     await state.engine?.muteLocalVideoStream(!state.muteCamera);
-
     state = state.update(muteCamera: !state.muteCamera);
   }
 
@@ -268,9 +268,10 @@ class CallController extends StateNotifier<CallGeneric> {
 
   sendCallEndNotification({required CallModel callModel}) {
     print("${callModel.receiverName}- ${callModel.receiverToken}");
-    String userUid = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
+    String userUid =
+        sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
     try {
-      if(callModel.senderUid == userUid) {
+      if (callModel.senderUid == userUid) {
         print("sending to receiver");
         sendPushMessageUsecase.call(FCMDto(
             recipientToken: callModel.receiverToken ?? "",
@@ -289,7 +290,7 @@ class CallController extends StateNotifier<CallGeneric> {
                 type: "call_end", body: jsonEncode(callModel.toJson())),
             imageUrl: ""));
       }
-    }catch(e) {
+    } catch (e) {
       print(e);
     }
   }

@@ -41,6 +41,12 @@ class _State extends ConsumerState<CallScreen> {
             .read(callProvider.notifier)
             .initiateCallEngine(callModel: widget.callModel);
       }
+      if (widget.callModel.callType == "video") {
+        await ref.read(callProvider.notifier).muteLocalVideoStream();
+      }
+      if (widget.callModel.callType == "voice") {
+        await ref.read(callProvider.notifier).muteLocalVideoStream();
+      }
     });
   }
 
@@ -80,134 +86,147 @@ class _State extends ConsumerState<CallScreen> {
                 }
 
                 return SafeArea(
-                  child: Stack(
-                    children: [
-                      // AgoraVideoButtons(client: client),
-                      Center(
-                        child: _remoteVideo(call, widget.callModel),
-                      ),
-                      // if (call.muteCamera && call.remoteIdJoined != null)
-                      //   AudioCallInterface(callModel: widget.callModel)
-                      // else
-                      /// Local Video View
-                      Align(
-                        alignment: Alignment.topLeft,
-                        child: SizedBox(
-                          width: 100,
-                          height: 150,
-                          child: Center(
-                            child: call.isJoined
-                                ? AgoraVideoView(
-                                    controller: VideoViewController(
-                                      rtcEngine: call.engine!,
-                                      canvas: const VideoCanvas(uid: 0),
-                                    ),
-                                  )
-                                : const CircularProgressIndicator(),
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child: Align(
-                          alignment: Alignment.topRight,
-                          child: Container(
-                            height: 60,
-                            width: 60,
-                            decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.secondary,
-                                borderRadius: BorderRadius.circular(30)),
-                            child: InkWell(
-                              onTap: () async {
-                                await ref
-                                    .read(callProvider.notifier)
-                                    .switchCamera();
-                              },
-                              child: const Icon(
-                                Icons.switch_camera,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: Container(
-                          height: context.height * 0.1,
-                          margin: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Theme.of(context).colorScheme.secondary,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              InkWell(
-                                onTap: () async {
-                                  await ref
-                                      .read(callProvider.notifier)
-                                      .muteLocalAudioStream();
-                                  // print(ref.read(callProvider).muteVoice);
-                                },
-                                child: Icon(
-                                  Icons.mic_off,
-                                  color: call.muteVoice
-                                      ? Colors.red
-                                      : Colors.black,
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () async {
-                                  await ref
-                                      .read(callProvider.notifier)
-                                      .leaveChannel(
-                                          callModel: widget.callModel);
-                                  await ref
-                                      .read(callProvider.notifier)
-                                      .sendCallEndNotification(
-                                          callModel: widget.callModel);
-                                  if(widget.isCalling) {
-                                    container.read(goRouterProvider).pop();
-                                  }
-                                   else {
-                                    ref.read(callStateProvider.notifier).state = CallState.ended;
-                                  }
-
-                                },
-                                child: const Icon(
-                                  Icons.call_end,
-                                  color: Colors.red,
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () async {
-                                  await ref
-                                      .read(callProvider.notifier)
-                                      .muteLocalVideoStream();
-                                  // await ref
-                                  //     .read(callProvider.notifier)
-                                  //     .muteAllRemoteVideoStreams();
-                                },
-                                child: Icon(
-                                  Icons.videocam_off,
-                                  color: call.muteCamera
-                                      ? Colors.red
-                                      : Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
+                    //child: videoCallUI(call, context),
+                    child: videoCallUI(call, context));
               }));
+  }
+
+  Widget voiceCallUI(
+      CallGeneric call, BuildContext context, CallModel callModel) {
+    return Stack(
+      children: [
+        Center(
+          child: AudioCallInterface(callModel: callModel),
+        ),
+        buildCallControls(context, call),
+      ],
+    );
+  }
+
+  Widget videoCallUI(CallGeneric call, BuildContext context) {
+    return Stack(
+      children: [
+        // AgoraVideoButtons(client: client),
+        Center(
+          child: _remoteVideo(call, widget.callModel),
+        ),
+        // if (call.muteCamera && call.remoteIdJoined != null)
+        //   AudioCallInterface(callModel: widget.callModel)
+        // else
+        /// Local Video View
+        if (!call.muteCamera)
+          Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 100,
+              height: 150,
+              child: Center(
+                child: call.isJoined
+                    ? AgoraVideoView(
+                        controller: VideoViewController(
+                          rtcEngine: call.engine!,
+                          canvas: const VideoCanvas(uid: 0),
+                        ),
+                      )
+                    : const CircularProgressIndicator(),
+              ),
+            ),
+          ),
+        if (!call.muteCamera)
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Container(
+                height: 60,
+                width: 60,
+                decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondary,
+                    borderRadius: BorderRadius.circular(30)),
+                child: InkWell(
+                  onTap: () async {
+                    await ref.read(callProvider.notifier).switchCamera();
+                  },
+                  child: const Icon(
+                    Icons.switch_camera,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        buildCallControls(context, call),
+      ],
+    );
+  }
+
+  Widget buildCallControls(BuildContext context, CallGeneric call) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: Container(
+        height: context.height * 0.1,
+        margin: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Theme.of(context).colorScheme.secondary,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            InkWell(
+              onTap: () async {
+                await ref.read(callProvider.notifier).muteLocalAudioStream();
+                // print(ref.read(callProvider).muteVoice);
+              },
+              child: Icon(
+                Icons.mic_off,
+                color: call.muteVoice ? Colors.red : Colors.black,
+              ),
+            ),
+            InkWell(
+              onTap: () async {
+                await ref
+                    .read(callProvider.notifier)
+                    .leaveChannel(callModel: widget.callModel);
+                await ref
+                    .read(callProvider.notifier)
+                    .sendCallEndNotification(callModel: widget.callModel);
+                if (widget.isCalling) {
+                  container.read(goRouterProvider).pop();
+                } else {
+                  if (mounted) {
+                    ref.read(callStateProvider.notifier).state =
+                        CallState.ended;
+                  }
+                }
+              },
+              child: const Icon(
+                Icons.call_end,
+                color: Colors.red,
+              ),
+            ),
+            InkWell(
+              onTap: () async {
+                await ref.read(callProvider.notifier).muteLocalVideoStream();
+                // await ref
+                //     .read(callProvider.notifier)
+                //     .muteAllRemoteVideoStreams();
+              },
+              child: Icon(
+                Icons.videocam_off,
+                color: call.muteCamera ? Colors.red : Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _remoteVideo(CallGeneric call, CallModel callModel) {
     /// Remote Video View
-    if (call.remoteIdJoined != null && !call.muteAllRemoteVideo) {
+    if (call.remoteIdJoined != null &&
+        !call.muteAllRemoteVideo &&
+        !call.muteCamera) {
       return SafeArea(
         child: AgoraVideoView(
           controller: VideoViewController.remote(
