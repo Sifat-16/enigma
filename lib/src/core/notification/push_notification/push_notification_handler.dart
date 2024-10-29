@@ -78,7 +78,7 @@ class PushNotificationHandler {
   static void handleMessage(RemoteMessage message, AppMode appMode) {
     Map<String, dynamic> data = message.data;
     PushBodyModel pushBodyModel = PushBodyModel.fromJson(data);
-    debug(message.data["type"]);
+    // debug(message.data["type"]);
     if (appMode == AppMode.FOREGROUND) {
       print("Handle for FOREGROUND");
       if (pushBodyModel.type == 'incoming_call') {

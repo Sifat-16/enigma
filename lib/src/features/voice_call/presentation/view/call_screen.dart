@@ -1,5 +1,9 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:enigma/src/core/global/global_variables.dart';
+import 'package:enigma/src/core/router/router.dart';
+import 'package:enigma/src/core/utils/extension/context_extension.dart';
 import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
+import 'package:enigma/src/features/voice_call/presentation/view/components/audio_call_interface.dart';
 import 'package:enigma/src/features/voice_call/presentation/view_model/call_controller.dart';
 import 'package:enigma/src/features/voice_call/presentation/view_model/call_generic.dart';
 import 'package:flutter/material.dart';
@@ -8,8 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// MultiChannel Example
 class CallScreen extends ConsumerStatefulWidget {
   /// Construct the [JoinChannelVideo]
-  const CallScreen({Key? key, required this.callModel, required this.isCalling})
-      : super(key: key);
+  const CallScreen({super.key, required this.callModel, required this.isCalling});
   final bool isCalling;
   final CallModel callModel;
   static const String route = "/call";
@@ -46,52 +49,137 @@ class _State extends ConsumerState<CallScreen> {
   Widget build(BuildContext context) {
     final call = ref.watch(callProvider);
     // print("Agora Client ${call.agoraClient}");
-    print("Agora Engine ${call.engine}");
+    // print("Agora Engine ${call.engine}");
     return Scaffold(
-        body: /*call.agoraClient == null && */ call.engine == null
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : Stack(
+      body: call.engine == null
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SafeArea(
+              child: Stack(
                 children: [
+                  // AgoraVideoButtons(client: client),
                   Center(
-                    child: _remoteVideo(call),
+                    child: _remoteVideo(call, widget.callModel),
+                  ),
+                  // if (call.muteCamera && call.remoteIdJoined != null)
+                  //   AudioCallInterface(callModel: widget.callModel)
+                  // else
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: 100,
+                        height: 150,
+                        child: Center(
+                          child: call.isJoined
+                              ? AgoraVideoView(
+                                  controller: VideoViewController(
+                                    rtcEngine: call.engine!,
+                                    canvas: const VideoCanvas(uid: 0),
+                                  ),
+                                )
+                              : const CircularProgressIndicator(),
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.all(15.0),
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        height: 60,
+                        width: 60,
+                        decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            borderRadius: BorderRadius.circular(30)),
+                        child: InkWell(
+                          onTap: () async {
+                            await ref
+                                .read(callProvider.notifier)
+                                .switchCamera();
+                          },
+                          child: const Icon(
+                            Icons.switch_camera,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                   Align(
-                    alignment: Alignment.topLeft,
-                    child: SizedBox(
-                      width: 100,
-                      height: 150,
-                      child: Center(
-                        child: call.isJoined
-                            ? AgoraVideoView(
-                                controller: VideoViewController(
-                                  rtcEngine: call.engine!,
-                                  canvas: const VideoCanvas(uid: 0),
-                                ),
-                              )
-                            : const CircularProgressIndicator(),
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      height: context.height * 0.1,
+                      margin: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          InkWell(
+                            onTap: () async {
+                              await ref
+                                  .read(callProvider.notifier)
+                                  .muteLocalAudioStream();
+                              // print(ref.read(callProvider).muteVoice);
+                            },
+                            child: Icon(
+                              Icons.mic_off,
+                              color: call.muteVoice ? Colors.red : Colors.black,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () async {
+                              await ref
+                                  .read(callProvider.notifier)
+                                  .leaveChannel();
+                              container.read(goRouterProvider).pop();
+                            },
+                            child: const Icon(
+                              Icons.call_end,
+                              color: Colors.red,
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () async {
+                              await ref
+                                  .read(callProvider.notifier)
+                                  .muteLocalVideoStream();
+                              await ref
+                                  .read(callProvider.notifier)
+                                  .muteAllRemoteVideoStreams();
+                            },
+                            child: Icon(
+                              Icons.videocam_off,
+                              color: call.muteAllRemoteVideo
+                                  ? Colors.red
+                                  : Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ],
-              ));
+              ),
+            ),
+    );
   }
 
-  Widget _remoteVideo(CallGeneric call) {
+  Widget _remoteVideo(CallGeneric call, CallModel callModel) {
     if (call.remoteIdJoined != null) {
-      return AgoraVideoView(
-        controller: VideoViewController.remote(
-          rtcEngine: call.engine!,
-          canvas: VideoCanvas(uid: call.remoteIdJoined),
-          connection: RtcConnection(channelId: widget.callModel.channelId),
+      return SafeArea(
+        child: AgoraVideoView(
+          controller: VideoViewController.remote(
+            rtcEngine: call.engine!,
+            canvas: VideoCanvas(uid: call.remoteIdJoined),
+            connection: RtcConnection(channelId: widget.callModel.channelId),
+          ),
         ),
       );
     } else {
-      return const Text(
-        'Please wait for remote user to join',
-        textAlign: TextAlign.center,
-      );
+      return AudioCallInterface(callModel: callModel);
     }
   }
 }

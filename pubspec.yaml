@@ -68,6 +68,7 @@ dependencies:
   path_provider: ^2.1.4
   voice_message_package: ^2.2.1
   google_mlkit_barcode_scanning: ^0.13.0
+#  flutter_barcode_scanner: ^2.0.0
   barcode_widget: ^2.0.4
   googleapis_auth: ^1.6.0
   agora_rtc_engine: ^6.3.2

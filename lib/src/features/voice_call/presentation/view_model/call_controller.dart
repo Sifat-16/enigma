@@ -1,10 +1,13 @@
 import 'dart:convert';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:enigma/src/core/global/global_variables.dart';
 import 'package:enigma/src/core/router/router.dart';
 // import 'package:agora_uikit/agora_uikit.dart';
 import 'package:enigma/src/core/rtc/rtc_config.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
+import 'package:enigma/src/features/chat_request/presentation/view/people_screen.dart';
+import 'package:enigma/src/features/message/presentation/view/message_screen.dart';
 import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
 import 'package:enigma/src/features/voice_call/presentation/view/call_screen.dart';
 import 'package:enigma/src/features/voice_call/presentation/view_model/call_generic.dart';
@@ -90,12 +93,14 @@ class CallController extends StateNotifier<CallGeneric> {
           (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
         debug(
             '[onUserOffline] connection: ${connection.toJson()}  rUid: $rUid reason: $reason');
-
+        // leaveChannel();
         state = state.update(remoteIdJoined: null);
       },
       onLeaveChannel: (RtcConnection connection, RtcStats stats) {
         debug(
             '[onLeaveChannel] connection: ${connection.toJson()} stats: ${stats.toJson()}');
+        // state = state.update(remoteIdJoined: null);
+        // rootNavigatorKey.currentContext!.pop();
         state = state.update(isJoined: false);
       },
       onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid,
@@ -141,6 +146,7 @@ class CallController extends StateNotifier<CallGeneric> {
     await state.engine?.leaveChannel();
     state.update(
         openCamera: true, muteCamera: false, muteAllRemoteVideo: false);
+    dispose();
   }
 
   Future<void> switchCamera() async {
@@ -153,8 +159,14 @@ class CallController extends StateNotifier<CallGeneric> {
     state = state.update(openCamera: !state.openCamera);
   }
 
+  muteLocalAudioStream() async {
+    await state.engine?.muteLocalAudioStream(!state.muteVoice);
+    state = state.update(muteVoice: !state.muteVoice);
+  }
+
   muteLocalVideoStream() async {
     await state.engine?.muteLocalVideoStream(!state.muteCamera);
+
     state = state.update(muteCamera: !state.muteCamera);
   }
 
@@ -168,7 +180,7 @@ class CallController extends StateNotifier<CallGeneric> {
     // TODO: implement dispose
     //state.engine?.unregisterEventHandler(_rtcEngineEventHandler!);
     state.engine?.leaveChannel();
-    //state.engine?.release();
+    // state.engine?.release();
     super.dispose();
   }
 
@@ -176,32 +188,64 @@ class CallController extends StateNotifier<CallGeneric> {
     showDialog(
       context: rootNavigatorKey.currentContext!,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Incoming Call"),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  CallModel callModel = CallModel.fromJson(
-                    jsonDecode(pushBodyModel.body),
-                  );
+        // return AlertDialog(
+        //   title: const Text("Incoming Call"),
+        //   actions: [
+        //     TextButton(
+        //         onPressed: () {
+        //           CallModel callModel = CallModel.fromJson(
+        //             jsonDecode(pushBodyModel.body),
+        //           );
+        //
+        //           context.pop();
+        //           Navigator.push(
+        //             context,
+        //             MaterialPageRoute(
+        //               builder: (context) =>
+        //                   CallScreen(callModel: callModel, isCalling: false),
+        //             ),
+        //           );
+        //         },
+        //         child: const Text("Accept")),
+        //     TextButton(
+        //       onPressed: () {
+        //         context.pop();
+        //       },
+        //       child: const Text("Decline"),
+        //     ),
+        //   ],
+        // );
+        return Consumer(
+          builder: (context, rf, child) {
+            final controller = rf.watch(callProvider);
+            return controller.isJoined ? AlertDialog(
+              title: const Text("Incoming Call"),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      CallModel callModel = CallModel.fromJson(
+                        jsonDecode(pushBodyModel.body),
+                      );
 
-                  context.pop();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CallScreen(callModel: callModel, isCalling: false),
-                    ),
-                  );
-                },
-                child: const Text("Accept")),
-            TextButton(
-              onPressed: () {
-                context.pop();
-              },
-              child: const Text("Decline"),
-            ),
-          ],
+                      context.pop();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              CallScreen(callModel: callModel, isCalling: false),
+                        ),
+                      );
+                    },
+                    child: const Text("Accept")),
+                TextButton(
+                  onPressed: () {
+                    context.pop();
+                  },
+                  child: const Text("Decline"),
+                ),
+              ],
+            ) : const SizedBox();
+          },
         );
       },
     );
