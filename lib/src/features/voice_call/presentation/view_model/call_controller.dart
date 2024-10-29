@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:enigma/src/core/database/local/shared_preference/shared_preference_keys.dart';
+import 'package:enigma/src/core/database/local/shared_preference/shared_preference_manager.dart';
 import 'package:enigma/src/core/router/router.dart';
 // import 'package:agora_uikit/agora_uikit.dart';
 import 'package:enigma/src/core/rtc/rtc_config.dart';
@@ -9,6 +11,7 @@ import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
 import 'package:enigma/src/features/voice_call/presentation/view/call_screen.dart';
 import 'package:enigma/src/features/voice_call/presentation/view_model/call_generic.dart';
 import 'package:enigma/src/shared/data/model/push_body_model/push_body_model.dart';
+import 'package:enigma/src/shared/dependency_injection/dependency_injection.dart';
 import 'package:enigma/src/shared/domain/dto/fcm_dto.dart';
 import 'package:enigma/src/shared/domain/use_cases/send_push_message_usecase.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +26,7 @@ final callProvider =
 class CallController extends StateNotifier<CallGeneric> {
   CallController(this.ref) : super(CallGeneric());
   Ref ref;
+  SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
 
   SendPushMessageUsecase sendPushMessageUsecase = SendPushMessageUsecase();
 
@@ -102,7 +106,15 @@ class CallController extends StateNotifier<CallGeneric> {
         state = state.update(isJoined: false);
       },
       onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid,
-          RemoteVideoState state, RemoteVideoStateReason reason, int elapsed) {
+          RemoteVideoState stat, RemoteVideoStateReason reason, int elapsed) {
+        print("Remote Video Camera State:${stat.name}");
+        print("Remote video state reason: ${reason.name}");
+        print("Remote video state elapse: ${elapsed}");
+        if(stat == RemoteVideoState.remoteVideoStateDecoding){
+          state = state.update(muteAllRemoteVideo: true);
+        } else {
+          state = state.update(muteAllRemoteVideo: false);
+        }
         debug(
             '[onRemoteVideoStateChanged] connection: ${connection.toJson()} remoteUid: $remoteUid state: $state reason: $reason elapsed: $elapsed');
       },
@@ -256,12 +268,29 @@ class CallController extends StateNotifier<CallGeneric> {
 
   sendCallEndNotification({required CallModel callModel}) {
     print("${callModel.receiverName}- ${callModel.receiverToken}");
-    sendPushMessageUsecase.call(FCMDto(
-        recipientToken: callModel.receiverToken ?? "",
-        title: "",
-        body: "",
-        data: PushBodyModel(
-            type: "call_end", body: jsonEncode(callModel.toJson())),
-        imageUrl: ""));
+    String userUid = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
+    try {
+      if(callModel.senderUid == userUid) {
+        print("sending to receiver");
+        sendPushMessageUsecase.call(FCMDto(
+            recipientToken: callModel.receiverToken ?? "",
+            title: "",
+            body: "",
+            data: PushBodyModel(
+                type: "call_end", body: jsonEncode(callModel.toJson())),
+            imageUrl: ""));
+      } else {
+        print("sending to sender");
+        sendPushMessageUsecase.call(FCMDto(
+            recipientToken: callModel.senderToken ?? "",
+            title: "",
+            body: "",
+            data: PushBodyModel(
+                type: "call_end", body: jsonEncode(callModel.toJson())),
+            imageUrl: ""));
+      }
+    }catch(e) {
+      print(e);
+    }
   }
 }

@@ -89,6 +89,7 @@ class _State extends ConsumerState<CallScreen> {
                       // if (call.muteCamera && call.remoteIdJoined != null)
                       //   AudioCallInterface(callModel: widget.callModel)
                       // else
+                      /// Local Video View
                       Align(
                         alignment: Alignment.topLeft,
                         child: SizedBox(
@@ -165,7 +166,13 @@ class _State extends ConsumerState<CallScreen> {
                                       .read(callProvider.notifier)
                                       .sendCallEndNotification(
                                           callModel: widget.callModel);
-                                  container.read(goRouterProvider).pop();
+                                  if(widget.isCalling) {
+                                    container.read(goRouterProvider).pop();
+                                  }
+                                   else {
+                                    ref.read(callStateProvider.notifier).state = CallState.ended;
+                                  }
+
                                 },
                                 child: const Icon(
                                   Icons.call_end,
@@ -177,13 +184,13 @@ class _State extends ConsumerState<CallScreen> {
                                   await ref
                                       .read(callProvider.notifier)
                                       .muteLocalVideoStream();
-                                  await ref
-                                      .read(callProvider.notifier)
-                                      .muteAllRemoteVideoStreams();
+                                  // await ref
+                                  //     .read(callProvider.notifier)
+                                  //     .muteAllRemoteVideoStreams();
                                 },
                                 child: Icon(
                                   Icons.videocam_off,
-                                  color: call.muteAllRemoteVideo
+                                  color: call.muteCamera
                                       ? Colors.red
                                       : Colors.black,
                                 ),
@@ -199,7 +206,8 @@ class _State extends ConsumerState<CallScreen> {
   }
 
   Widget _remoteVideo(CallGeneric call, CallModel callModel) {
-    if (call.remoteIdJoined != null) {
+    /// Remote Video View
+    if (call.remoteIdJoined != null && !call.muteAllRemoteVideo) {
       return SafeArea(
         child: AgoraVideoView(
           controller: VideoViewController.remote(

@@ -10,6 +10,7 @@ class CallModel {
   String? senderUid;
   String? senderName;
   String? senderAvatar;
+  String? senderToken;
 
   CallModel(
       {this.token,
@@ -21,7 +22,9 @@ class CallModel {
       this.senderUid,
       this.senderName,
       this.senderAvatar,
-      this.receiverToken});
+      this.receiverToken,
+      this.senderToken,
+      });
 
   // Convert a CallModel object to a JSON map
   Map<String, dynamic> toJson() {
@@ -35,6 +38,8 @@ class CallModel {
       'senderUid': senderUid,
       'senderName': senderName,
       'senderAvatar': senderAvatar,
+      'receiverToken': receiverToken,
+      'senderToken': senderToken,
     };
   }
 
@@ -50,6 +55,8 @@ class CallModel {
       senderUid: json['senderUid'] as String?,
       senderName: json['senderName'] as String?,
       senderAvatar: json['senderAvatar'] as String?,
+      receiverToken: json['receiverToken'] as String?,
+      senderToken: json['senderToken'] as String?,
     );
   }
 }
