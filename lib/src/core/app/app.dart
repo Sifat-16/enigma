@@ -33,7 +33,6 @@ class _AppState extends ConsumerState<App> {
   Widget build(BuildContext context) {
     final appInitialization = ref.watch(appInitializationProvider);
     final profileController = ref.watch(profileProvider);
-    debug("in build ${profileController.isLightMode}");
     return appInitialization.when(data: (data) {
       final router = ref.watch(goRouterProvider);
       return MaterialApp.router(

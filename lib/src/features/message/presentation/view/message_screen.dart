@@ -262,11 +262,11 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 onTap: () async {
                   ref.read(goRouterProvider).push(StoryScreen.setRoute(-1));
                 },
-                icon: Icons.image,
+                icon: Icons.history,
               ),
             filesOption(
               title: "Camera",
-              subtitle: "Share a picture",
+              subtitle: "Take a picture",
               onTap: () async {
                 imageFile = await ChatUtils.pickImage(
                   imageSource: ImageSource.camera,
@@ -283,10 +283,22 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
               icon: Icons.camera,
             ),
             filesOption(
-              title: "Video",
-              subtitle: "Share a video clip",
-              onTap: () {},
-              icon: Icons.video_camera_front_outlined,
+              title: "Gallery",
+              subtitle: "Select a picture",
+              onTap: () async {
+                imageFile = await ChatUtils.pickImage(
+                  imageSource: ImageSource.gallery,
+                );
+
+                if (imageFile != null) {
+                  ref
+                      .read(goRouterProvider)
+                      .push(StoryPreviewScreen.route, extra: imageFile);
+                }
+
+                debug(imageFile?.path ?? "");
+              },
+              icon: Icons.image,
             ),
           ],
         );

@@ -112,7 +112,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 bool isSuccess = false;
                 isSuccess = await ref.read(logoutProvider.notifier).logout();
                 if (isSuccess) {
-                  debug("here");
                   ref.read(goRouterProvider).go(AuthScreen.route);
                 }
               },
@@ -232,6 +231,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       if (profileController.profileEntity != null) {
                         ProfileEntity updatedProfile =
                             profileController.profileEntity!;
+                        if (phoneNumberTEC.text.trim().toLowerCase() ==
+                            profileController.profileEntity?.phoneNumber) {
+                          ref
+                              .read(profileProvider.notifier)
+                              .toggleProfileEdit("phoneNumber");
+                          return;
+                        }
                         updatedProfile.phoneNumber = phoneNumberTEC.text.trim();
                         ref
                             .read(profileProvider.notifier)
@@ -338,7 +344,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           ref.read(profileProvider).listOfAllProfiles;
 
                       for (ProfileEntity p in listOfAllProfiles) {
-                        debug(p.email);
                         if (p.email?.toLowerCase() ==
                             emailTEC.text.trim().toLowerCase()) {
                           BotToast.showText(text: "Email already in use");
@@ -477,6 +482,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: IconButton(
                     onPressed: () async {
                       if (profileController.profileEntity != null) {
+                        if (nameTEC.text.trim() ==
+                            profileController.profileEntity?.name) {
+                          debug("In name");
+                          ref
+                              .read(profileProvider.notifier)
+                              .toggleProfileEdit("name");
+                          return;
+                        }
+
                         ProfileEntity updatedProfile =
                             profileController.profileEntity!;
                         updatedProfile.name = nameTEC.text.trim();
