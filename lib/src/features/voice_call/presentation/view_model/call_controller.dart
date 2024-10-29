@@ -1,13 +1,10 @@
 import 'dart:convert';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:enigma/src/core/global/global_variables.dart';
 import 'package:enigma/src/core/router/router.dart';
 // import 'package:agora_uikit/agora_uikit.dart';
 import 'package:enigma/src/core/rtc/rtc_config.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
-import 'package:enigma/src/features/chat_request/presentation/view/people_screen.dart';
-import 'package:enigma/src/features/message/presentation/view/message_screen.dart';
 import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
 import 'package:enigma/src/features/voice_call/presentation/view/call_screen.dart';
 import 'package:enigma/src/features/voice_call/presentation/view_model/call_generic.dart';
@@ -19,8 +16,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-final callProvider = StateNotifierProvider<CallController, CallGeneric>(
-    (ref) => CallController(ref));
+final callProvider =
+    StateNotifierProvider.autoDispose<CallController, CallGeneric>(
+        (ref) => CallController(ref));
 
 class CallController extends StateNotifier<CallGeneric> {
   CallController(this.ref) : super(CallGeneric());
@@ -110,6 +108,8 @@ class CallController extends StateNotifier<CallGeneric> {
       },
     ));
 
+    engine.getConnectionState();
+
     await engine.enableVideo();
     await engine.startPreview();
 
@@ -142,10 +142,11 @@ class CallController extends StateNotifier<CallGeneric> {
     );
   }
 
-  Future<void> leaveChannel() async {
+  Future<void> leaveChannel({required CallModel callModel}) async {
     await state.engine?.leaveChannel();
     state.update(
         openCamera: true, muteCamera: false, muteAllRemoteVideo: false);
+
     dispose();
   }
 
@@ -188,66 +189,79 @@ class CallController extends StateNotifier<CallGeneric> {
     showDialog(
       context: rootNavigatorKey.currentContext!,
       builder: (context) {
-        // return AlertDialog(
-        //   title: const Text("Incoming Call"),
-        //   actions: [
-        //     TextButton(
-        //         onPressed: () {
-        //           CallModel callModel = CallModel.fromJson(
-        //             jsonDecode(pushBodyModel.body),
-        //           );
-        //
-        //           context.pop();
-        //           Navigator.push(
-        //             context,
-        //             MaterialPageRoute(
-        //               builder: (context) =>
-        //                   CallScreen(callModel: callModel, isCalling: false),
-        //             ),
-        //           );
-        //         },
-        //         child: const Text("Accept")),
-        //     TextButton(
-        //       onPressed: () {
-        //         context.pop();
-        //       },
-        //       child: const Text("Decline"),
-        //     ),
-        //   ],
-        // );
-        return Consumer(
-          builder: (context, rf, child) {
-            final controller = rf.watch(callProvider);
-            return controller.isJoined ? AlertDialog(
-              title: const Text("Incoming Call"),
-              actions: [
-                TextButton(
-                    onPressed: () {
-                      CallModel callModel = CallModel.fromJson(
-                        jsonDecode(pushBodyModel.body),
-                      );
+        return AlertDialog(
+          title: const Text("Incoming Call"),
+          actions: [
+            TextButton(
+                onPressed: () {
+                  CallModel callModel = CallModel.fromJson(
+                    jsonDecode(pushBodyModel.body),
+                  );
 
-                      context.pop();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              CallScreen(callModel: callModel, isCalling: false),
-                        ),
-                      );
-                    },
-                    child: const Text("Accept")),
-                TextButton(
-                  onPressed: () {
-                    context.pop();
-                  },
-                  child: const Text("Decline"),
-                ),
-              ],
-            ) : const SizedBox();
-          },
+                  context.pop();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CallScreen(callModel: callModel, isCalling: false),
+                    ),
+                  );
+                },
+                child: const Text("Accept")),
+            TextButton(
+              onPressed: () {
+                context.pop();
+              },
+              child: const Text("Decline"),
+            ),
+          ],
         );
+        // return Consumer(
+        //   builder: (context, rf, child) {
+        //     final controller = rf.watch(callProvider);
+        //     return controller.isJoined
+        //         ? AlertDialog(
+        //             title: const Text("Incoming Call"),
+        //             actions: [
+        //               TextButton(
+        //                   onPressed: () {
+        //                     CallModel callModel = CallModel.fromJson(
+        //                       jsonDecode(pushBodyModel.body),
+        //                     );
+        //
+        //                     context.pop();
+        //                     Navigator.push(
+        //                       context,
+        //                       MaterialPageRoute(
+        //                         builder: (context) => CallScreen(
+        //                             callModel: callModel, isCalling: false),
+        //                       ),
+        //                     );
+        //                   },
+        //                   child: const Text("Accept")),
+        //               TextButton(
+        //                 onPressed: () {
+        //                   context.pop();
+        //                 },
+        //                 child: const Text("Decline"),
+        //               ),
+        //             ],
+        //           )
+        //         : const SizedBox();
+        //   },
+        // );
       },
     );
+  }
+
+  sendCallEndNotification({required CallModel callModel}) {
+    print("${callModel.receiverName}- ${callModel.receiverToken}");
+    sendPushMessageUsecase.call(FCMDto(
+        recipientToken: callModel.receiverToken ?? "",
+        title: "",
+        body: "",
+        data: PushBodyModel(
+            type: "call_end", body: jsonEncode(callModel.toJson())),
+        imageUrl: ""));
   }
 }

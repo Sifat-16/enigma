@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:enigma/src/core/global/global_variables.dart';
 import 'package:enigma/src/core/notification/local_notification/local_notification_handler.dart';
 import 'package:enigma/src/core/router/router.dart';
-import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/chat/presentation/view/chat_screen.dart';
 import 'package:enigma/src/features/profile/domain/entity/profile_entity.dart';
 import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
 import 'package:enigma/src/features/voice_call/presentation/view_model/call_controller.dart';
+import 'package:enigma/src/features/voice_call/presentation/view_model/call_state_controller.dart';
 import 'package:enigma/src/shared/data/model/push_body_model/push_body_model.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -75,16 +75,22 @@ class PushNotificationHandler {
     return initialMessage;
   }
 
-  static void handleMessage(RemoteMessage message, AppMode appMode) {
+  static void handleMessage(RemoteMessage message, AppMode appMode) async {
     Map<String, dynamic> data = message.data;
     PushBodyModel pushBodyModel = PushBodyModel.fromJson(data);
     // debug(message.data["type"]);
     if (appMode == AppMode.FOREGROUND) {
       print("Handle for FOREGROUND");
-      if (pushBodyModel.type == 'incoming_call') {
-        container.read(callProvider.notifier).showCallDialog(
-              pushBodyModel: pushBodyModel,
-            );
+      if (pushBodyModel.type == 'incoming_call' ||
+          pushBodyModel.type == 'call_end') {
+        if (pushBodyModel.type == 'incoming_call') {
+          container.read(callProvider.notifier).showCallDialog(
+                pushBodyModel: pushBodyModel,
+              );
+        } else {
+          await FlutterCallkitIncoming.endAllCalls();
+          container.read(callStateProvider.notifier).state = CallState.ended;
+        }
       } else {
         LocalNotificationHandler.showLocalNotification(
             title: message.notification?.title ?? "",
@@ -101,6 +107,14 @@ class PushNotificationHandler {
         print("in message");
         container.read(goRouterProvider).push(ChatScreen.route,
             extra: ProfileEntity.fromJson(jsonDecode(pushBodyModel.body)));
+      } else if (pushBodyModel.type == 'call_end') {
+        try {
+          CallModel callModel =
+              CallModel.fromJson(jsonDecode(pushBodyModel.body));
+        } catch (e) {}
+
+        container.read(callStateProvider.notifier).state = CallState.ended;
+        await FlutterCallkitIncoming.endAllCalls();
       }
     } else if (appMode == AppMode.TERMINATED) {
       print("Handle for TERMINATED");
@@ -110,17 +124,30 @@ class PushNotificationHandler {
         showCallkitIncoming(callModel);
       } else if (pushBodyModel.type == "message") {
         print("in message");
+      } else if (pushBodyModel.type == 'call_end') {
+        try {
+          CallModel callModel =
+              CallModel.fromJson(jsonDecode(pushBodyModel.body));
+        } catch (e) {}
+        await FlutterCallkitIncoming.endAllCalls();
       }
     } else if (appMode == AppMode.REVIVED) {
       print("Handle for REVIVED");
-      if (pushBodyModel.type == "incoming_call") {
+      /*if (pushBodyModel.type == "incoming_call") {
         CallModel callModel =
             CallModel.fromJson(jsonDecode(pushBodyModel.body));
         showCallkitIncoming(callModel);
-      } else if (pushBodyModel.type == "message") {
+      } else */
+      if (pushBodyModel.type == "message") {
         print("in message");
         container.read(goRouterProvider).push(ChatScreen.route,
             extra: ProfileEntity.fromJson(jsonDecode(pushBodyModel.body)));
+      } else if (pushBodyModel.type == 'call_end') {
+        try {
+          CallModel callModel =
+              CallModel.fromJson(jsonDecode(pushBodyModel.body));
+        } catch (e) {}
+        await FlutterCallkitIncoming.endAllCalls();
       }
     }
   }
