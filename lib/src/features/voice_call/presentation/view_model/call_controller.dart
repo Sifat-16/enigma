@@ -4,8 +4,6 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:enigma/src/core/database/local/shared_preference/shared_preference_keys.dart';
 import 'package:enigma/src/core/database/local/shared_preference/shared_preference_manager.dart';
 import 'package:enigma/src/core/router/router.dart';
-
-// import 'package:agora_uikit/agora_uikit.dart';
 import 'package:enigma/src/core/rtc/rtc_config.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
@@ -21,23 +19,20 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 final callProvider =
-    StateNotifierProvider.autoDispose<CallController, CallGeneric>(
-        (ref) => CallController(ref));
+    StateNotifierProvider.autoDispose<CallController, CallGeneric>((ref) => CallController(ref));
 
 class CallController extends StateNotifier<CallGeneric> {
   CallController(this.ref) : super(CallGeneric());
   Ref ref;
   Timer? timer;
-  SharedPreferenceManager sharedPreferenceManager =
-      sl.get<SharedPreferenceManager>();
+  SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
 
   SendPushMessageUsecase sendPushMessageUsecase = SendPushMessageUsecase();
 
   RtcEngineEventHandler? _rtcEngineEventHandler;
 
   Future<void> call({required CallModel callModel}) async {
-    callModel.token ??= await RTCConfig.fetchToken(
-        callModel.uid ?? 0, callModel.channelId ?? "");
+    callModel.token ??= await RTCConfig.fetchToken(callModel.uid ?? 0, callModel.channelId ?? "");
 
     debug("call model stat ${callModel.toJson()}");
 
@@ -54,15 +49,12 @@ class CallController extends StateNotifier<CallGeneric> {
         body: "Call came from ${callModel.senderName}",
         imageUrl: callModel.senderAvatar ?? "",
         data: PushBodyModel(
-            showNotification: false,
-            type: "incoming_call",
-            body: jsonEncode(callModel.toJson()))));
+            showNotification: false, type: "incoming_call", body: jsonEncode(callModel.toJson()))));
   }
 
   Future<void> initiateCallEngine({required CallModel callModel}) async {
     await [Permission.microphone, Permission.camera].request();
-    callModel.token ??= await RTCConfig.fetchToken(
-        callModel.uid ?? 0, callModel.channelId ?? "");
+    callModel.token ??= await RTCConfig.fetchToken(callModel.uid ?? 0, callModel.channelId ?? "");
 
     RtcEngine engine = createAgoraRtcEngine();
 
@@ -70,49 +62,41 @@ class CallController extends StateNotifier<CallGeneric> {
 
     await engine.initialize(
       const RtcEngineContext(
-          appId: RTCConfig.APP_ID,
-          channelProfile: ChannelProfileType.channelProfileCommunication),
+          appId: RTCConfig.APP_ID, channelProfile: ChannelProfileType.channelProfileCommunication),
     );
     engine.registerEventHandler(RtcEngineEventHandler(
       onError: (ErrorCodeType err, String msg) {
         print('[onError] err: $err, msg: $msg');
       },
       onJoinChannelSuccess: (RtcConnection connection, int elapsed) async {
-        debug(
-            '[onJoinChannelSuccess] connection: ${connection.localUid} elapsed: $elapsed');
+        debug('[onJoinChannelSuccess] connection: ${connection.localUid} elapsed: $elapsed');
 
-        state =
-            state.update(isJoined: true, localUidJoined: connection.localUid);
+        state = state.update(isJoined: true, localUidJoined: connection.localUid);
 
         // try {
         //   state.engine?.startPreview();
         // } catch (e) {}
       },
       onUserJoined: (RtcConnection connection, int rUid, int elapsed) {
-        debug(
-            '[onUserJoined] connection: ${connection.toJson()} remoteUid: $rUid elapsed: $elapsed');
+        debug('[onUserJoined] connection: ${connection.toJson()} remoteUid: $rUid elapsed: $elapsed');
 
         state = state.update(remoteIdJoined: rUid);
         startTimer();
       },
-      onUserOffline:
-          (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
-        debug(
-            '[onUserOffline] connection: ${connection.toJson()}  rUid: $rUid reason: $reason');
+      onUserOffline: (RtcConnection connection, int rUid, UserOfflineReasonType reason) {
+        debug('[onUserOffline] connection: ${connection.toJson()}  rUid: $rUid reason: $reason');
         // leaveChannel();
         state = state.update(remoteIdJoined: null);
-
       },
       onLeaveChannel: (RtcConnection connection, RtcStats stats) {
-        debug(
-            '[onLeaveChannel] connection: ${connection.toJson()} stats: ${stats.toJson()}');
+        debug('[onLeaveChannel] connection: ${connection.toJson()} stats: ${stats.toJson()}');
         // state = state.update(remoteIdJoined: null);
         // rootNavigatorKey.currentContext!.pop();
         state = state.update(isJoined: false);
-        if(timer != null) cancelTimer();
+        if (timer != null) cancelTimer();
       },
-      onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid,
-          RemoteVideoState stat, RemoteVideoStateReason reason, int elapsed) {
+      onRemoteVideoStateChanged: (RtcConnection connection, int remoteUid, RemoteVideoState stat,
+          RemoteVideoStateReason reason, int elapsed) {
         // print("Remote Video Camera State:${stat.name}");
         // print("Remote video state reason: ${reason.name}");
         // print("Remote video state elapse: ${elapsed}");
@@ -162,8 +146,7 @@ class CallController extends StateNotifier<CallGeneric> {
 
   Future<void> leaveChannel({required CallModel callModel}) async {
     await state.engine?.leaveChannel();
-    state.update(
-        openCamera: true, muteCamera: false, muteAllRemoteVideo: false);
+    state.update(openCamera: true, muteCamera: false, muteAllRemoteVideo: false);
 
     dispose();
   }
@@ -220,8 +203,7 @@ class CallController extends StateNotifier<CallGeneric> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          CallScreen(callModel: callModel, isCalling: false),
+                      builder: (context) => CallScreen(callModel: callModel, isCalling: false),
                     ),
                   );
                 },
@@ -240,8 +222,7 @@ class CallController extends StateNotifier<CallGeneric> {
 
   sendCallEndNotification({required CallModel callModel}) {
     print("${callModel.receiverName}- ${callModel.receiverToken}");
-    String userUid =
-        sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
+    String userUid = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
     try {
       if (callModel.senderUid == userUid) {
         print("sending to receiver");
@@ -249,8 +230,7 @@ class CallController extends StateNotifier<CallGeneric> {
             recipientToken: callModel.receiverToken ?? "",
             title: "",
             body: "",
-            data: PushBodyModel(
-                type: "call_end", body: jsonEncode(callModel.toJson())),
+            data: PushBodyModel(type: "call_end", body: jsonEncode(callModel.toJson())),
             imageUrl: ""));
       } else {
         print("sending to sender");
@@ -258,8 +238,7 @@ class CallController extends StateNotifier<CallGeneric> {
             recipientToken: callModel.senderToken ?? "",
             title: "",
             body: "",
-            data: PushBodyModel(
-                type: "call_end", body: jsonEncode(callModel.toJson())),
+            data: PushBodyModel(type: "call_end", body: jsonEncode(callModel.toJson())),
             imageUrl: ""));
       }
     } catch (e) {
@@ -277,7 +256,8 @@ class CallController extends StateNotifier<CallGeneric> {
       },
     );
   }
-  cancelTimer(){
+
+  cancelTimer() {
     timer?.cancel();
   }
 }

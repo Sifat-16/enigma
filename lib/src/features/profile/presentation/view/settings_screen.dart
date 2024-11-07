@@ -22,8 +22,10 @@ import 'package:enigma/src/features/profile/presentation/view_model/generic/prof
 import 'package:enigma/src/shared/dependency_injection/dependency_injection.dart';
 import 'package:enigma/src/shared/widgets/shared_appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -37,18 +39,19 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  SharedPreferenceManager sharedPreferenceManager =
-      sl.get<SharedPreferenceManager>();
+  SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
   TextEditingController nameTEC = TextEditingController();
   TextEditingController emailTEC = TextEditingController();
   TextEditingController phoneNumberTEC = TextEditingController();
   bool isLightMode = false;
+  static const methodChannel = MethodChannel('com.wakil_training_.enigma/info');
 
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((t) {
-      ref.read(profileProvider.notifier).readProfile(
-          sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID));
+      ref
+          .read(profileProvider.notifier)
+          .readProfile(sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID));
     });
     super.initState();
   }
@@ -87,12 +90,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           trailingWidgets: [
             GestureDetector(
               onTap: () async {
-                await ref.read(profileProvider.notifier).toggleThemeMode(
-                    isLightMode: !profileController.isLightMode);
+                await ref
+                    .read(profileProvider.notifier)
+                    .toggleThemeMode(isLightMode: !profileController.isLightMode);
                 debug("light mode set : ${!profileController.isLightMode}");
                 sharedPreferenceManager.insertValue(
-                    key: SharedPreferenceKeys.IS_LIGHT_MODE,
-                    data: !profileController.isLightMode);
+                    key: SharedPreferenceKeys.IS_LIGHT_MODE, data: !profileController.isLightMode);
                 RestartWidget.restartApp(context);
               },
               child: Container(
@@ -100,9 +103,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 height: context.width * .1,
                 margin: const EdgeInsets.all(8),
                 child: Icon(
-                  profileController.isLightMode
-                      ? Icons.light_mode_outlined
-                      : Icons.dark_mode_outlined,
+                  profileController.isLightMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
                   size: 25,
                 ),
               ),
@@ -151,6 +152,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     height: 20,
                   ),
                   buildPhoneNumberSection(context, profileController),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _getMemoryInformation();
+                    },
+                    child: const Text("Memory Info"),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _startRecording();
+                    },
+                    child: const Text("Start Recording"),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await _stopRecording();
+                    },
+                    child: const Text("Stop Recording"),
+                  )
                 ],
               )
             ],
@@ -160,8 +188,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget buildPhoneNumberSection(
-      BuildContext context, ProfileGeneric profileController) {
+  _startRecording() async {
+    // try {
+    final String result = await methodChannel.invokeMethod("startRecording");
+    print("Start Recording: $result");
+    // } catch (e) {}
+  }
+
+  _stopRecording() async {
+    final String result = await methodChannel.invokeMethod("stopRecording");
+    print("Start Recording: $result");
+  }
+
+  Future<void> _getMemoryInformation() async {
+    try {
+      final Map result = await methodChannel.invokeMethod('getMemoryInfo');
+      print('Current Ram Usage: $result');
+    } on PlatformException catch (e) {
+      print("Failed to get memory result: '${e.message}'.");
+    }
+  }
+
+  Widget buildPhoneNumberSection(BuildContext context, ProfileGeneric profileController) {
     return SizedBox(
       height: context.height * 0.06,
       //color: Colors.amber,
@@ -179,8 +227,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         style: TextStyle(color: Colors.grey),
                       ),
                       Text("${profileController.profileEntity?.phoneNumber}",
-                          style: Theme.of(context).textTheme.titleLarge,
-                          overflow: TextOverflow.ellipsis),
+                          style: Theme.of(context).textTheme.titleLarge, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
@@ -188,11 +235,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   flex: 1,
                   child: IconButton(
                     onPressed: () async {
-                      phoneNumberTEC.text =
-                          profileController.profileEntity?.phoneNumber ?? "";
-                      ref
-                          .read(profileProvider.notifier)
-                          .toggleProfileEdit("phoneNumber");
+                      phoneNumberTEC.text = profileController.profileEntity?.phoneNumber ?? "";
+                      ref.read(profileProvider.notifier).toggleProfileEdit("phoneNumber");
                     },
                     icon: const Icon(
                       Icons.edit,
@@ -212,10 +256,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
-                      fillColor: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.3),
+                      fillColor: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
                       hintText: "Phone Number",
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
@@ -229,26 +270,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: IconButton(
                     onPressed: () async {
                       if (profileController.profileEntity != null) {
-                        ProfileEntity updatedProfile =
-                            profileController.profileEntity!;
+                        ProfileEntity updatedProfile = profileController.profileEntity!;
                         if (phoneNumberTEC.text.trim().toLowerCase() ==
                             profileController.profileEntity?.phoneNumber) {
-                          ref
-                              .read(profileProvider.notifier)
-                              .toggleProfileEdit("phoneNumber");
+                          ref.read(profileProvider.notifier).toggleProfileEdit("phoneNumber");
                           return;
                         }
                         updatedProfile.phoneNumber = phoneNumberTEC.text.trim();
-                        ref
-                            .read(profileProvider.notifier)
-                            .updateProfile(updatedProfile);
-                        ref
-                            .read(profileProvider.notifier)
-                            .readProfile(updatedProfile.uid ?? "");
+                        ref.read(profileProvider.notifier).updateProfile(updatedProfile);
+                        ref.read(profileProvider.notifier).readProfile(updatedProfile.uid ?? "");
                       }
-                      ref
-                          .read(profileProvider.notifier)
-                          .toggleProfileEdit("phoneNumber");
+                      ref.read(profileProvider.notifier).toggleProfileEdit("phoneNumber");
                     },
                     icon: const Icon(
                       Icons.check,
@@ -260,8 +292,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget buildEmailSection(
-      BuildContext context, ProfileGeneric profileController) {
+  Widget buildEmailSection(BuildContext context, ProfileGeneric profileController) {
     return SizedBox(
       height: context.height * 0.06,
       //color: Colors.amber,
@@ -278,10 +309,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         "Email",
                         style: TextStyle(color: Colors.grey),
                       ),
-                      Text(
-                          "${sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_EMAIL)}",
-                          style: Theme.of(context).textTheme.titleLarge,
-                          overflow: TextOverflow.ellipsis),
+                      Text("${sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_EMAIL)}",
+                          style: Theme.of(context).textTheme.titleLarge, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
@@ -289,11 +318,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   flex: 1,
                   child: IconButton(
                     onPressed: () async {
-                      emailTEC.text = sharedPreferenceManager.getValue(
-                          key: SharedPreferenceKeys.USER_EMAIL);
-                      ref
-                          .read(profileProvider.notifier)
-                          .toggleProfileEdit("email");
+                      emailTEC.text = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_EMAIL);
+                      ref.read(profileProvider.notifier).toggleProfileEdit("email");
                     },
                     icon: const Icon(
                       Icons.edit,
@@ -310,13 +336,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: TextFormField(
                     controller: emailTEC,
                     decoration: InputDecoration(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 10),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
-                      fillColor: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.3),
+                      fillColor: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
                       hintText: "Email",
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
@@ -332,32 +354,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       bool isSuccess = false;
 
                       if (emailTEC.text.trim().toLowerCase() ==
-                          sharedPreferenceManager.getValue(
-                              key: SharedPreferenceKeys.USER_EMAIL)) {
-                        ref
-                            .read(profileProvider.notifier)
-                            .toggleProfileEdit("email");
+                          sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_EMAIL)) {
+                        ref.read(profileProvider.notifier).toggleProfileEdit("email");
                         return;
                       }
 
-                      List<ProfileEntity> listOfAllProfiles =
-                          ref.read(profileProvider).listOfAllProfiles;
+                      List<ProfileEntity> listOfAllProfiles = ref.read(profileProvider).listOfAllProfiles;
 
                       for (ProfileEntity p in listOfAllProfiles) {
-                        if (p.email?.toLowerCase() ==
-                            emailTEC.text.trim().toLowerCase()) {
+                        if (p.email?.toLowerCase() == emailTEC.text.trim().toLowerCase()) {
                           BotToast.showText(text: "Email already in use");
                           return;
                         }
                       }
 
                       if (profileController.profileEntity != null) {
-                        ProfileEntity updatedProfile =
-                            profileController.profileEntity!;
+                        ProfileEntity updatedProfile = profileController.profileEntity!;
                         updatedProfile.email = emailTEC.text.trim();
-                        isSuccess = await ref
-                            .read(authProvider.notifier)
-                            .changeEmail(email: updatedProfile.email!);
+                        isSuccess =
+                            await ref.read(authProvider.notifier).changeEmail(email: updatedProfile.email!);
 
                         if (isSuccess) {
                           showDialog<void>(
@@ -385,12 +400,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   TextButton(
                                     child: const Text('Ok'),
                                     onPressed: () async {
-                                      await ref
-                                          .read(logoutProvider.notifier)
-                                          .logout();
-                                      ref
-                                          .read(goRouterProvider)
-                                          .go(AuthScreen.setRoute());
+                                      await ref.read(logoutProvider.notifier).logout();
+                                      ref.read(goRouterProvider).go(AuthScreen.setRoute());
                                     },
                                   ),
                                 ],
@@ -399,9 +410,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           );
                         }
                       }
-                      ref
-                          .read(profileProvider.notifier)
-                          .toggleProfileEdit("email");
+                      ref.read(profileProvider.notifier).toggleProfileEdit("email");
                     },
                     icon: const Icon(
                       Icons.check,
@@ -413,8 +422,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget buildDisplayNameSection(
-      BuildContext context, ProfileGeneric profileController) {
+  Widget buildDisplayNameSection(BuildContext context, ProfileGeneric profileController) {
     return SizedBox(
       height: context.height * 0.06,
       //color: Colors.amber,
@@ -432,8 +440,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         style: TextStyle(color: Colors.grey),
                       ),
                       Text("${profileController.profileEntity?.name}",
-                          style: Theme.of(context).textTheme.titleLarge,
-                          overflow: TextOverflow.ellipsis),
+                          style: Theme.of(context).textTheme.titleLarge, overflow: TextOverflow.ellipsis),
                     ],
                   ),
                 ),
@@ -441,11 +448,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   flex: 1,
                   child: IconButton(
                     onPressed: () async {
-                      nameTEC.text =
-                          profileController.profileEntity?.name ?? "";
-                      ref
-                          .read(profileProvider.notifier)
-                          .toggleProfileEdit("name");
+                      nameTEC.text = profileController.profileEntity?.name ?? "";
+                      ref.read(profileProvider.notifier).toggleProfileEdit("name");
                     },
                     icon: const Icon(
                       Icons.edit,
@@ -465,10 +469,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     decoration: InputDecoration(
                       contentPadding: EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
-                      fillColor: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.3),
+                      fillColor: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
                       hintText: "Display name",
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
@@ -482,28 +483,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: IconButton(
                     onPressed: () async {
                       if (profileController.profileEntity != null) {
-                        if (nameTEC.text.trim() ==
-                            profileController.profileEntity?.name) {
+                        if (nameTEC.text.trim() == profileController.profileEntity?.name) {
                           debug("In name");
-                          ref
-                              .read(profileProvider.notifier)
-                              .toggleProfileEdit("name");
+                          ref.read(profileProvider.notifier).toggleProfileEdit("name");
                           return;
                         }
 
-                        ProfileEntity updatedProfile =
-                            profileController.profileEntity!;
+                        ProfileEntity updatedProfile = profileController.profileEntity!;
                         updatedProfile.name = nameTEC.text.trim();
-                        ref
-                            .read(profileProvider.notifier)
-                            .updateProfile(updatedProfile);
-                        ref
-                            .read(profileProvider.notifier)
-                            .readProfile(updatedProfile.uid ?? "");
+                        ref.read(profileProvider.notifier).updateProfile(updatedProfile);
+                        ref.read(profileProvider.notifier).readProfile(updatedProfile.uid ?? "");
                       }
-                      ref
-                          .read(profileProvider.notifier)
-                          .toggleProfileEdit("name");
+                      ref.read(profileProvider.notifier).toggleProfileEdit("name");
                     },
                     icon: const Icon(
                       Icons.check,
@@ -515,8 +506,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget buildImageSection(
-      BuildContext context, ProfileGeneric profileController) {
+  Widget buildImageSection(BuildContext context, ProfileGeneric profileController) {
     return Column(
       children: [
         Stack(
@@ -573,27 +563,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: "Camera",
               subtitle: "Take a picture",
               onTap: () async {
-                File? imageFile =
-                    await pickImage(imageSource: ImageSource.camera);
+                File? imageFile = await pickImage(imageSource: ImageSource.camera);
                 String? url;
                 if (imageFile != null) {
                   url = await ref.read(chatProvider.notifier).addImageMedia(
                         file: imageFile,
-                        directory: FirebaseStorageDirectoryName
-                            .PROFILE_PICTURE_DIRECTORY,
+                        directory: FirebaseStorageDirectoryName.PROFILE_PICTURE_DIRECTORY,
                         fileName: "${profileController.profileEntity?.uid}.jpg",
                       );
                 }
                 if (imageFile != null) {
-                  ProfileEntity updatedProfile =
-                      profileController.profileEntity!;
+                  ProfileEntity updatedProfile = profileController.profileEntity!;
                   updatedProfile.avatarUrl = url;
-                  ref
-                      .read(profileProvider.notifier)
-                      .updateProfile(updatedProfile);
-                  ref
-                      .read(profileProvider.notifier)
-                      .readProfile(updatedProfile.uid ?? "");
+                  ref.read(profileProvider.notifier).updateProfile(updatedProfile);
+                  ref.read(profileProvider.notifier).readProfile(updatedProfile.uid ?? "");
                 }
               },
               icon: Icons.camera,
@@ -602,27 +585,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: "Gallery",
               subtitle: "Set picture from gallery",
               onTap: () async {
-                File? imageFile =
-                    await pickImage(imageSource: ImageSource.gallery);
+                File? imageFile = await pickImage(imageSource: ImageSource.gallery);
                 String? url;
                 if (imageFile != null) {
                   url = await ref.read(chatProvider.notifier).addImageMedia(
                         file: imageFile,
-                        directory: FirebaseStorageDirectoryName
-                            .PROFILE_PICTURE_DIRECTORY,
+                        directory: FirebaseStorageDirectoryName.PROFILE_PICTURE_DIRECTORY,
                         fileName: "${profileController.profileEntity?.uid}.jpg",
                       );
                 }
                 if (imageFile != null) {
-                  ProfileEntity updatedProfile =
-                      profileController.profileEntity!;
+                  ProfileEntity updatedProfile = profileController.profileEntity!;
                   updatedProfile.avatarUrl = url;
-                  ref
-                      .read(profileProvider.notifier)
-                      .updateProfile(updatedProfile);
-                  ref
-                      .read(profileProvider.notifier)
-                      .readProfile(updatedProfile.uid ?? "");
+                  ref.read(profileProvider.notifier).updateProfile(updatedProfile);
+                  ref.read(profileProvider.notifier).readProfile(updatedProfile.uid ?? "");
                 }
               },
               icon: Icons.image,

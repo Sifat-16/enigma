@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:http/http.dart';
 

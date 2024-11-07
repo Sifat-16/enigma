@@ -12,9 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// MultiChannel Example
 class CallScreen extends ConsumerStatefulWidget {
-  /// Construct the [JoinChannelVideo]
   const CallScreen(
       {super.key, required this.callModel, required this.isCalling});
 

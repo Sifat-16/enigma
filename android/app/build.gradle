@@ -32,11 +32,12 @@ dependencies {
     implementation 'com.google.mlkit:text-recognition-devanagari:16.0.0'
     implementation 'com.google.mlkit:text-recognition-japanese:16.0.0'
     implementation 'com.google.mlkit:text-recognition-korean:16.0.0'
+    implementation "com.google.firebase:firebase-messaging"
 }
 
 android {
     namespace = "com.wakil_training_.enigma"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 31
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -54,7 +55,7 @@ android {
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = 23
 
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 31
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
