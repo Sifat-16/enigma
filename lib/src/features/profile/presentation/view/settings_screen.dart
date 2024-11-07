@@ -22,6 +22,7 @@ import 'package:enigma/src/features/profile/presentation/view_model/generic/prof
 import 'package:enigma/src/shared/dependency_injection/dependency_injection.dart';
 import 'package:enigma/src/shared/widgets/shared_appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -43,6 +44,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   TextEditingController emailTEC = TextEditingController();
   TextEditingController phoneNumberTEC = TextEditingController();
   bool isLightMode = false;
+  static const platform = MethodChannel('com.wakil_training_.enigma/ram');
+  String _ramUsage = "Unknown";
+
+  Future<void> _getRamUsage() async {
+    try {
+      final String ramUsage = await platform.invokeMethod('getRamUsage');
+      setState(() {
+        _ramUsage = ramUsage;
+      });
+    } on PlatformException catch (e) {
+      print("Failed to get RAM usage: '${e.message}'.");
+    }
+  }
 
   @override
   void initState() {
@@ -151,6 +165,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     height: 20,
                   ),
                   buildPhoneNumberSection(context, profileController),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Center(
+                    child: ElevatedButton(
+                        onPressed: () async {
+                          await _getRamUsage();
+                          BotToast.showText(text: _ramUsage);
+                        },
+                        child: const Text("Check RAM USAGE")),
+                  ),
                 ],
               )
             ],
@@ -210,7 +235,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     controller: phoneNumberTEC,
                     maxLines: null,
                     decoration: InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
                       fillColor: Theme.of(context)
                           .colorScheme
@@ -463,7 +489,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     controller: nameTEC,
                     maxLines: null,
                     decoration: InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 10),
                       filled: true,
                       fillColor: Theme.of(context)
                           .colorScheme

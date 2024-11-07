@@ -64,7 +64,7 @@ dependencies:
   flutter_ble_peripheral:
   google_mlkit_text_recognition: ^0.14.0
   nfc_manager: ^3.5.0
-  record: ^5.1.2
+  record:
   path_provider: ^2.1.4
   voice_message_package: ^2.2.1
   google_mlkit_barcode_scanning: ^0.13.0
