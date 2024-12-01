@@ -45,7 +45,6 @@ class StoryController extends StateNotifier<StoryGeneric> {
     response.fold((left) {
       BotToast.showText(text: left.message);
     }, (right) {
-      BotToast.showText(text: "Fetched stories successfully");
       if (isMyStory) {
         if ((right.storyList ?? []).isNotEmpty || right.name != null) {
           myStory = right;

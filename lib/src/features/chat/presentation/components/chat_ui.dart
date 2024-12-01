@@ -4,10 +4,12 @@ import 'package:enigma/src/core/utils/extension/context_extension.dart';
 import 'package:enigma/src/features/chat/domain/entity/chat_entity.dart';
 import 'package:enigma/src/features/chat/presentation/components/voice_message_view.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ChatUI extends StatelessWidget {
-  const ChatUI({super.key, required this.chat});
+  ChatUI({super.key, required this.chat});
 
+  bool isSameDay = false;
   final List<ChatEntity> chat;
 
   @override
@@ -20,11 +22,13 @@ class ChatUI extends StatelessWidget {
         reverse: true,
         itemCount: chat.length,
         itemBuilder: (context, index) {
-          chat.sort(
-            (b, a) => DateTime.parse(a.timestamp.toString()).compareTo(
-              DateTime.parse(b.timestamp.toString()),
-            ),
-          );
+          if (index > 0) {
+            isSameDay = DateFormat.yMEd().format(chat[index].timestamp!) ==
+                DateFormat.yMEd().format(chat[index - 1].timestamp!);
+          }
+
+          chat.sort((b, a) =>
+              DateTime.parse(a.timestamp.toString()).compareTo(DateTime.parse(b.timestamp.toString())));
           if (chat[index].sender == FirebaseHandler.auth.currentUser!.uid) {
             return Align(
               alignment: Alignment.centerRight,
@@ -45,7 +49,7 @@ class ChatUI extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (chat[index].content != null)
+                    if (chat[index].content != null && chat[index].content != "")
                       Text(
                         "${chat[index].content}",
                         softWrap: true,
@@ -57,11 +61,11 @@ class ChatUI extends StatelessWidget {
                           onTap: () {},
                           child: CachedNetworkImage(
                             imageUrl: chat[index].mediaLink!,
+                            fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(
                               child: CircularProgressIndicator(),
                             ),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.image),
+                            errorWidget: (context, url, error) => const Icon(Icons.image),
                           ),
                         )
                       else if (chat[index].type == MediaType.video)
@@ -120,11 +124,11 @@ class ChatUI extends StatelessWidget {
                           onTap: () {},
                           child: CachedNetworkImage(
                             imageUrl: chat[index].mediaLink!,
+                            fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(
                               child: CircularProgressIndicator(),
                             ),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.image),
+                            errorWidget: (context, url, error) => const Icon(Icons.image),
                           ),
                         )
                       else if (chat[index].type == MediaType.video)

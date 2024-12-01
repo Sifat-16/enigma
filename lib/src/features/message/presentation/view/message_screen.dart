@@ -49,7 +49,6 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     WidgetsBinding.instance.addPostFrameCallback((t) async {
       init();
     });
-    print("Calling Interacted Message");
     PushNotificationHandler.setupInteractedMessage();
     super.initState();
   }

@@ -45,8 +45,7 @@ Future<void> setupService() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   sl.registerSingletonAsync<SharedPreferenceManager>(() async {
-    final SharedPreferenceManager sharedPreferenceManager =
-        SharedPreferenceManager();
+    final SharedPreferenceManager sharedPreferenceManager = SharedPreferenceManager();
     await sharedPreferenceManager.init();
     return sharedPreferenceManager;
   });
@@ -83,8 +82,7 @@ Future<void> setupService() async {
 
   sl.registerSingleton<ChatRequestRepositoryImpl>(ChatRequestRepositoryImpl());
   sl.registerSingleton<SendChatRequestUseCase>(SendChatRequestUseCase());
-  sl.registerSingleton<FetchPendingRequestUseCase>(
-      FetchPendingRequestUseCase());
+  sl.registerSingleton<FetchPendingRequestUseCase>(FetchPendingRequestUseCase());
   sl.registerSingleton<FetchChatRequestUseCase>(FetchChatRequestUseCase());
   sl.registerSingleton<AcceptChatRequestUseCase>(AcceptChatRequestUseCase());
   sl.registerSingleton<FetchFriendsUseCase>(FetchFriendsUseCase());

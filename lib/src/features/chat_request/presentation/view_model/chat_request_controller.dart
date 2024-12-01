@@ -134,7 +134,6 @@ class ChatRequestController extends StateNotifier<ChatRequestGeneric> {
         BotToast.showText(text: left.message);
       }, (right) {
         state = state.update(listOfPendingRequest: right);
-        BotToast.showText(text: "Fetched pending request successfully");
       });
     }
 
@@ -172,7 +171,6 @@ class ChatRequestController extends StateNotifier<ChatRequestGeneric> {
         BotToast.showText(text: left.message);
       }, (right) {
         state = state.update(listOfChatRequest: right);
-        BotToast.showText(text: "Fetched chat request successfully");
       });
     }
 

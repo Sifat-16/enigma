@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:enigma/src/core/global/global_variables.dart';
 import 'package:enigma/src/core/network/remote/firebase/firebase_storage_directory_name.dart';
+import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/chat_utils/chat_utils.dart';
 import 'package:enigma/src/core/utils/extension/context_extension.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/chat/domain/entity/chat_entity.dart';
+import 'package:enigma/src/features/chat/presentation/components/media_preview_screen.dart';
 import 'package:enigma/src/features/chat/presentation/components/voice_message_view.dart';
 import 'package:enigma/src/features/chat/presentation/view-model/chat_controller.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_controller.dart';
@@ -26,13 +29,11 @@ class ChatScreenBottomBar extends ConsumerStatefulWidget {
   final String receiver;
 
   @override
-  ConsumerState<ChatScreenBottomBar> createState() =>
-      _ChatScreenBottomBarState();
+  ConsumerState<ChatScreenBottomBar> createState() => _ChatScreenBottomBarState();
 }
 
 class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
-  final ValueNotifier<TextEditingController> messageTextController =
-      ValueNotifier(TextEditingController());
+  final ValueNotifier<TextEditingController> messageTextController = ValueNotifier(TextEditingController());
   final ValueNotifier<File?> imageFile = ValueNotifier(null);
   final ValueNotifier<File?> audioFile = ValueNotifier(null);
   final ValueNotifier<bool> isRecording = ValueNotifier(false);
@@ -75,8 +76,8 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                 imageFile.value = await ChatUtils.pickImage(
                   imageSource: ImageSource.gallery,
                 );
-                messageTextController.value.text =
-                    await ChatUtils.textRecognition(imageFile.value!);
+                container.read(goRouterProvider).pop();
+                messageTextController.value.text = await ChatUtils.textRecognition(imageFile.value!);
               },
               icon: Icons.perm_media_outlined,
             ),
@@ -112,21 +113,25 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
               builder: (context, value, child) {
                 if (value != null) {
                   return Stack(
-                    alignment: Alignment.bottomCenter,
+                    alignment: Alignment.topRight,
                     children: [
-                      SizedBox(
-                        height: context.height * 0.1,
-                        width: context.width * 0.2,
-                        child: Image(image: FileImage(imageFile.value!)),
-                      ),
-                      InkWell(
-                        onTap: () {
-                          imageFile.value = null;
-                          messageTextController.value.clear();
-                          // messageTextController.value.dispose();
-                        },
-                        child: const Icon(Icons.cancel),
-                      ),
+                      MediaPreviewScreen(file: value),
+                      Container(
+                        margin: const EdgeInsets.all(10),
+                        height: 50,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            imageFile.value = null;
+                          },
+                          icon: const Icon(
+                            Icons.delete,
+                          ),
+                        ),
+                      )
                     ],
                   );
                 } else {
@@ -167,12 +172,9 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                       ),
                       IconButton(
                         onPressed: () async {
-                          url = await ref
-                              .read(chatProvider.notifier)
-                              .addImageMedia(
+                          url = await ref.read(chatProvider.notifier).addImageMedia(
                                 file: audioFile.value!,
-                                directory: FirebaseStorageDirectoryName
-                                    .CHAT_MEDIA_DIRECTORY,
+                                directory: FirebaseStorageDirectoryName.CHAT_MEDIA_DIRECTORY,
                                 fileName: const Uuid().v4(),
                               );
                           ChatEntity chatEntity = ChatEntity(
@@ -185,10 +187,9 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                           );
                           debug(widget.sender);
                           debug(widget.receiver);
-                          await ref
-                              .read(chatProvider.notifier)
-                              .addChat(chatEntity);
                           audioFile.value = null;
+                          ref.read(chatProvider.notifier).addChat(chatEntity);
+
                         },
                         icon: const Icon(Icons.send),
                       ),
@@ -218,10 +219,7 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                     maxLines: null,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withOpacity(0.3),
+                      fillColor: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
                       hintText: "Write your message",
                       border: OutlineInputBorder(
                         borderSide: BorderSide.none,
@@ -252,8 +250,7 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                                 imageSource: ImageSource.camera,
                               );
                               messageTextController.value.text =
-                                  await ChatUtils.textRecognition(
-                                      imageFile.value!);
+                                  await ChatUtils.textRecognition(imageFile.value!);
                             },
                             child: CircleAvatar(
                               //radius: context.width * 0.05,
@@ -292,37 +289,26 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                         onTap: () async {
                           Uuid uuid = const Uuid();
                           if (imageFile.value != null) {
-                            url = await ref
-                                .read(chatProvider.notifier)
-                                .addImageMedia(
+                            url = await ref.read(chatProvider.notifier).addImageMedia(
                                   file: imageFile.value!,
-                                  directory: FirebaseStorageDirectoryName
-                                      .CHAT_MEDIA_DIRECTORY,
-                                  fileName:
-                                      imageFile.value!.path.split("/").last,
+                                  directory: FirebaseStorageDirectoryName.CHAT_MEDIA_DIRECTORY,
+                                  fileName: imageFile.value!.path.split("/").last,
                                 );
                           }
-                          if (messageTextController.value.text
-                                  .trim()
-                                  .isNotEmpty ||
-                              imageFile.value != null) {
+                          if (messageTextController.value.text.trim().isNotEmpty || imageFile.value != null) {
                             ChatEntity chatEntity = ChatEntity(
                               id: uuid.v4(),
                               content: messageTextController.value.text.trim(),
-                              type: url != null
-                                  ? MediaType.image
-                                  : MediaType.text,
+                              type: url != null ? MediaType.image : MediaType.text,
                               mediaLink: url,
                               timestamp: DateTime.now(),
                               receiver: widget.receiver,
                               sender: widget.sender,
                             );
-                            await ref
-                                .read(chatProvider.notifier)
-                                .addChat(chatEntity);
-                            messageTextController.value.clear();
-                            // debug("Success message");
                             imageFile.value = null;
+                            messageTextController.value.clear();
+                            ref.read(chatProvider.notifier).addChat(chatEntity);
+                            // debug("Success message");
                           }
                         },
                         child: CircleAvatar(

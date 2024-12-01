@@ -75,7 +75,6 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
     response.fold((left) {
       BotToast.showText(text: left.message);
     }, (right) {
-      BotToast.showText(text: "Profile read Successfully");
       state = state.update(profileEntity: right);
     });
     state = state.update(isLoading: false);
@@ -99,7 +98,7 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
       (right) {
         List<ProfileEntity> people = filterAllPeople(right);
         state = state.update(listOfPeople: people);
-        BotToast.showText(text: "Read all people successfully");
+
         isSuccess = true;
       },
     );
@@ -118,7 +117,6 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
       },
       (right) {
         state = state.update(listOfAllProfiles: right);
-        BotToast.showText(text: "Read all profiles successfully");
         isSuccess = true;
       },
     );
@@ -138,7 +136,6 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
       BotToast.showText(text: left.message);
     }, (right) {
       state = state.update(listOfFriends: right);
-      BotToast.showText(text: "Fetched friends successfully");
     });
   }
 

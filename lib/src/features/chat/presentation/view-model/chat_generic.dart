@@ -1,7 +1,5 @@
 import 'package:enigma/src/core/router/model/initial_data_model.dart';
 
-/// Farhan -> Y51bMMMKXAT1AQs0vPutTfVCkTB2
-/// Nayem -> SjKB4wFCutQyMOmrJUhXlX3eo5l1
 class ChatGeneric {
   // List<ChatEntity> chats;
   //
@@ -12,11 +10,17 @@ class ChatGeneric {
   // }
 
   InitialDataModel? incomingChatData;
+  bool? isLoading;
 
-  ChatGeneric({this.incomingChatData});
+  ChatGeneric({
+    this.incomingChatData,
+    this.isLoading,
+  });
 
-  ChatGeneric update({InitialDataModel? incomingChatData}) {
+  ChatGeneric update({InitialDataModel? incomingChatData, bool? isLoading}) {
     return ChatGeneric(
-        incomingChatData: incomingChatData ?? this.incomingChatData);
+      incomingChatData: incomingChatData ?? this.incomingChatData,
+      isLoading: isLoading ?? this.isLoading,
+    );
   }
 }

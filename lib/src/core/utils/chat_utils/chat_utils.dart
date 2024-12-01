@@ -12,6 +12,7 @@ class ChatUtils {
     ImagePicker imagePicker = ImagePicker();
     XFile? getImage = await imagePicker.pickImage(
       source: imageSource,
+      imageQuality: 30,
     );
     File? file;
     if (getImage != null) {
@@ -41,8 +42,7 @@ class ChatUtils {
     final InputImage inputImage = InputImage.fromFile(file);
     final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
 
-    final RecognizedText recognizedText =
-        await textRecognizer.processImage(inputImage);
+    final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
     String text = recognizedText.text;
     return text;
   }
@@ -50,10 +50,8 @@ class ChatUtils {
   static void startRecord(AudioRecorder record) async {
     try {
       if (await record.hasPermission()) {
-        final Directory appDocumentsDir =
-            await getApplicationDocumentsDirectory();
-        await record.start(const RecordConfig(),
-            path: "${appDocumentsDir.path}/recording.m4a");
+        final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
+        await record.start(const RecordConfig(), path: "${appDocumentsDir.path}/recording.m4a");
       }
     } catch (e) {
       return;

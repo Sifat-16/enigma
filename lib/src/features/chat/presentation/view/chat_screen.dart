@@ -126,7 +126,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 height: context.width * .1,
                 margin: const EdgeInsets.all(8),
                 child: const Icon(
-                  Icons.video_call,
+                  Icons.videocam,
                   size: 25,
                 ),
               ),
