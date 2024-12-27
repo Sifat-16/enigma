@@ -36,4 +36,8 @@ class SignupController extends StateNotifier<SignupGeneric> {
     state = state.update(isLoading: false);
     return uid;
   }
+
+  void changeVisibility() {
+    state = state.update(passwordVisibility: !state.passwordVisibility);
+  }
 }

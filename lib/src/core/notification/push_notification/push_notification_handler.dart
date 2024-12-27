@@ -5,9 +5,9 @@ import 'package:enigma/src/core/notification/local_notification/local_notificati
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/features/chat/presentation/view/chat_screen.dart';
 import 'package:enigma/src/features/profile/domain/entity/profile_entity.dart';
-import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
-import 'package:enigma/src/features/voice_call/presentation/view_model/call_controller.dart';
-import 'package:enigma/src/features/voice_call/presentation/view_model/call_state_controller.dart';
+import 'package:enigma/src/features/call/data/model/call_model.dart';
+import 'package:enigma/src/features/call/presentation/view_model/call_controller.dart';
+import 'package:enigma/src/features/call/presentation/view_model/call_state_controller.dart';
 import 'package:enigma/src/shared/data/model/push_body_model/push_body_model.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';

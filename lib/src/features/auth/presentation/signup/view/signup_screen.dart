@@ -6,7 +6,9 @@ import 'package:enigma/src/features/auth/presentation/components/custom_form_fie
 import 'package:enigma/src/features/auth/presentation/signup/view_model/signup_controller.dart';
 import 'package:enigma/src/features/profile/domain/entity/profile_entity.dart';
 import 'package:enigma/src/features/profile/presentation/view_model/controller/profile_controller.dart';
+import 'package:enigma/src/shared/data/model/validation_tracker/validation_tracker_model.dart';
 import 'package:enigma/src/shared/widgets/shared_appbar.dart';
+import 'package:enigma/src/shared/widgets/validation_tracker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,8 +22,7 @@ class SignupScreen extends ConsumerWidget {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
 
@@ -71,11 +72,10 @@ class SignupScreen extends ConsumerWidget {
                     textAlign: TextAlign.center,
                   ),
                 ),
-                SizedBox(height: context.height * 0.1),
                 CustomFormField(
                   controller: nameController,
                   labelText: "Your Name",
-                  validator: (val) {},
+                  validator: (val) => "",
                 ),
                 CustomFormField(
                   controller: emailController,
@@ -86,12 +86,14 @@ class SignupScreen extends ConsumerWidget {
                   controller: passwordController,
                   labelText: "Password",
                   validator: Validators.passwordValidator,
-                  helperText:
-                      "Password must contains uppercase, lowercase and digit. E.g. Enigma1",
+                  obscureText: signupController.passwordVisibility,
+                  onPressed: ref.read(signUpProvider.notifier).changeVisibility,
+                  helperText: "Password must contains one A-Z, a-z and 0-9. E.g. Enigma1",
                 ),
                 CustomFormField(
                   controller: confirmPasswordController,
                   labelText: "Confirm Password",
+                  obscureText: signupController.passwordVisibility,
                   validator: (val) {
                     if (val?.trim() != passwordController.text.trim()) {
                       return "Password Not Matched";
@@ -99,7 +101,14 @@ class SignupScreen extends ConsumerWidget {
                     return null;
                   },
                 ),
-                SizedBox(height: context.height * 0.1),
+                ValidationTracker(
+                  checkerController: passwordController,
+                  validTrackers: [
+                    ValidationTrackerModel(regExp: RegExp(r'[a-z]'), message: "Must contain a lower case letter"),
+                    ValidationTrackerModel(regExp: RegExp(r'[A-Z]'), message: "Must contain a upper case letter"),
+                    ValidationTrackerModel(regExp: RegExp(r'[0-9]'), message: "Must contain a number"),
+                  ],
+                ),
                 if (signupController.isLoading || profileController.isLoading)
                   const CircularProgressIndicator()
                 else
@@ -107,11 +116,10 @@ class SignupScreen extends ConsumerWidget {
                     buttonName: "Create an Account",
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
-                        String uid =
-                            await ref.read(signUpProvider.notifier).signUp(
-                                  email: emailController.text.trim(),
-                                  password: passwordController.text.trim(),
-                                );
+                        String uid = await ref.read(signUpProvider.notifier).signUp(
+                              email: emailController.text.trim(),
+                              password: passwordController.text.trim(),
+                            );
                         if (uid.isNotEmpty) {
                           showDialog<void>(
                             barrierDismissible: false,
@@ -140,16 +148,13 @@ class SignupScreen extends ConsumerWidget {
                                   TextButton(
                                     child: const Text('OK'),
                                     onPressed: () async {
-                                      ProfileEntity profileEntity =
-                                          ProfileEntity(
+                                      ProfileEntity profileEntity = ProfileEntity(
                                         uid: uid,
                                         name: nameController.text.trim(),
                                         email: emailController.text.trim(),
                                         createdAt: DateTime.now(),
                                       );
-                                      await ref
-                                          .read(profileProvider.notifier)
-                                          .createProfile(profileEntity);
+                                      await ref.read(profileProvider.notifier).createProfile(profileEntity);
                                     },
                                   ),
                                 ],

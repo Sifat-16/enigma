@@ -6,9 +6,9 @@ import 'package:enigma/src/core/database/local/shared_preference/shared_preferen
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/rtc/rtc_config.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
-import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
-import 'package:enigma/src/features/voice_call/presentation/view/call_screen.dart';
-import 'package:enigma/src/features/voice_call/presentation/view_model/call_generic.dart';
+import 'package:enigma/src/features/call/data/model/call_model.dart';
+import 'package:enigma/src/features/call/presentation/view/call_screen.dart';
+import 'package:enigma/src/features/call/presentation/view_model/call_generic.dart';
 import 'package:enigma/src/shared/data/model/push_body_model/push_body_model.dart';
 import 'package:enigma/src/shared/dependency_injection/dependency_injection.dart';
 import 'package:enigma/src/shared/domain/dto/fcm_dto.dart';

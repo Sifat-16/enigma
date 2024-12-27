@@ -2,15 +2,16 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:enigma/src/core/global/global_variables.dart';
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/extension/context_extension.dart';
+import 'package:enigma/src/features/call/data/model/call_model.dart';
+import 'package:enigma/src/features/call/presentation/view_model/call_controller.dart';
+import 'package:enigma/src/features/call/presentation/view_model/call_generic.dart';
+import 'package:enigma/src/features/call/presentation/view_model/call_state_controller.dart';
 import 'package:enigma/src/features/message/presentation/view/message_screen.dart';
-import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
-import 'package:enigma/src/features/voice_call/presentation/view/components/audio_call_interface.dart';
-import 'package:enigma/src/features/voice_call/presentation/view_model/call_controller.dart';
-import 'package:enigma/src/features/voice_call/presentation/view_model/call_generic.dart';
-import 'package:enigma/src/features/voice_call/presentation/view_model/call_state_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'components/audio_call_interface.dart';
 
 class CallScreen extends ConsumerStatefulWidget {
   const CallScreen(

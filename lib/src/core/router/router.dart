@@ -16,8 +16,8 @@ import 'package:enigma/src/features/profile/presentation/view/settings_screen.da
 import 'package:enigma/src/features/splash/presentation/view/splash_screen.dart';
 import 'package:enigma/src/features/story/presentation/view/story_preview_screen.dart';
 import 'package:enigma/src/features/story/presentation/view/story_screen.dart';
-import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
-import 'package:enigma/src/features/voice_call/presentation/view/call_screen.dart';
+import 'package:enigma/src/features/call/data/model/call_model.dart';
+import 'package:enigma/src/features/call/presentation/view/call_screen.dart';
 import 'package:enigma/src/shared/view/bottom_nav_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
@@ -189,7 +189,7 @@ final goRouterProvider = Provider(
                 GoRoute(
                     path: "/settings",
                     builder: (context, state) {
-                      return SettingsScreen();
+                      return const SettingsScreen();
                     }),
               ])
             ],

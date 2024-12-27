@@ -10,8 +10,12 @@ import 'package:enigma/src/features/auth/presentation/components/or_widget.dart'
 import 'package:enigma/src/features/auth/presentation/components/social_media_icon_button.dart';
 import 'package:enigma/src/features/auth/presentation/forget_password/view/forgot_password_screen.dart';
 import 'package:enigma/src/features/auth/presentation/login/view_model/login_controller.dart';
+import 'package:enigma/src/features/auth/presentation/signup/view_model/signup_controller.dart';
+import 'package:enigma/src/shared/controller/validator/validatio_tracker_controller.dart';
+import 'package:enigma/src/shared/data/model/validation_tracker/validation_tracker_model.dart';
 import 'package:enigma/src/shared/dependency_injection/dependency_injection.dart';
 import 'package:enigma/src/shared/widgets/shared_appbar.dart';
+import 'package:enigma/src/shared/widgets/validation_tracker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +33,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  ValidationTrackerController validationTrackerController = ValidationTrackerController();
   final SharedPreferenceManager preferenceManager = sl.get();
 
   final formKey = GlobalKey<FormState>();
@@ -43,6 +48,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final loginController = ref.watch(loginProvider);
+    final signUpController = ref.watch(signUpProvider);
     return Scaffold(
       appBar: SharedAppbar(
         leadingWidget: InkWell(
@@ -119,20 +125,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 CustomFormField(
                   controller: passwordController,
                   labelText: "Password",
-                  // obscureText: true,
-                  validator: Validators.passwordValidator,
+                  obscureText: signUpController.passwordVisibility,
+                  onPressed: ref.read(signUpProvider.notifier).changeVisibility,
+                  validator: (String? value) => null,
                 ),
-                SizedBox(height: context.height * 0.2),
+                ValidationTracker(
+                  checkerController: passwordController,
+                  validationTrackerController: validationTrackerController,
+                  validTrackers: [
+                    ValidationTrackerModel(
+                        regExp: RegExp(r'[a-z]'), message: "Must contain a lower case letter"),
+                    ValidationTrackerModel(
+                        regExp: RegExp(r'[A-Z]'), message: "Must contain a upper case letter"),
+                    ValidationTrackerModel(regExp: RegExp(r'[0-9]'), message: "Must contain a number"),
+                  ],
+                ),
+                // ListTile(
+                //   leading: Checkbox(
+                //     value: loginController.isContainDigit,
+                //     onChanged: (value) {},
+                //   ),
+                //   title: const Text("At least a digit"),
+                // ),
+                // SizedBox(height: context.height * 0.2),
                 if (loginController.isLoading)
                   const CircularProgressIndicator()
                 else
                   CustomElevatedButton(
                     buttonName: "Log in",
                     onPressed: () async {
-                      if (formKey.currentState!.validate()) {
-                        await ref.read(loginProvider.notifier).login(
-                            email: emailController.text.trim(),
-                            password: passwordController.text);
+                      if (formKey.currentState!.validate() && validationTrackerController.isValid) {
+                        await ref
+                            .read(loginProvider.notifier)
+                            .login(email: emailController.text.trim(), password: passwordController.text);
                       }
                     },
                   ),

@@ -9,6 +9,8 @@ class CustomFormField extends StatelessWidget {
     required this.validator,
     this.obscureText = false,
     this.helperText,
+    this.onChanged,
+    this.onPressed,
   });
 
   final TextEditingController controller;
@@ -16,7 +18,8 @@ class CustomFormField extends StatelessWidget {
   final bool obscureText;
   final FormFieldValidator<String> validator;
   final String? helperText;
-
+  final Function(String)? onChanged;
+  final Function()? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +29,23 @@ class CustomFormField extends StatelessWidget {
         height: context.height * 0.08,
         child: TextFormField(
           controller: controller,
+          onChanged: onChanged ?? (value) {},
           decoration: InputDecoration(
             labelText: labelText,
             helperText: helperText,
-            // prefixIcon: IconButton(onPressed: onPressed, icon: icon),
             contentPadding: const EdgeInsets.symmetric(vertical: 10),
+            suffixIcon: onPressed != null
+                ? InkWell(
+                    onTap: onPressed,
+                    child: Icon(
+                      Icons.remove_red_eye,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  )
+                : null,
+            errorStyle: const TextStyle(
+              height: 1,
+            ),
           ),
           obscureText: obscureText,
           validator: validator,

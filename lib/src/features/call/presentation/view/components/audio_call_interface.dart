@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
+import 'package:enigma/src/features/call/data/model/call_model.dart';
 import 'package:flutter/material.dart';
 
 class AudioCallInterface extends StatefulWidget {

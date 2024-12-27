@@ -8,8 +8,8 @@ import 'package:enigma/src/features/chat/presentation/view-model/chat_controller
 import 'package:enigma/src/features/profile/domain/entity/profile_entity.dart';
 import 'package:enigma/src/features/profile/presentation/view/profile_screen.dart';
 import 'package:enigma/src/features/profile/presentation/view_model/controller/profile_controller.dart';
-import 'package:enigma/src/features/voice_call/data/model/call_model.dart';
-import 'package:enigma/src/features/voice_call/presentation/view/call_screen.dart';
+import 'package:enigma/src/features/call/data/model/call_model.dart';
+import 'package:enigma/src/features/call/presentation/view/call_screen.dart';
 import 'package:enigma/src/shared/widgets/circular_display_picture.dart';
 import 'package:enigma/src/shared/widgets/shared_appbar.dart';
 import 'package:flutter/material.dart';

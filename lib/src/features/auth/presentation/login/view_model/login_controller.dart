@@ -4,6 +4,7 @@ import 'package:enigma/src/core/database/local/shared_preference/shared_preferen
 import 'package:enigma/src/core/database/local/shared_preference/shared_preference_manager.dart';
 import 'package:enigma/src/core/network/responses/failure_response.dart';
 import 'package:enigma/src/core/router/router.dart';
+import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/auth/domain/dto/login_dto.dart';
 import 'package:enigma/src/features/auth/domain/usecases/login_usecase.dart';
 import 'package:enigma/src/features/auth/presentation/login/view_model/login_generic.dart';
@@ -15,8 +16,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final loginProvider = StateNotifierProvider<LoginController, LoginGeneric>(
-    (ref) => LoginController(ref));
+final loginProvider = StateNotifierProvider<LoginController, LoginGeneric>((ref) => LoginController(ref));
 
 class LoginController extends StateNotifier<LoginGeneric> {
   LoginController(this.ref) : super(LoginGeneric());
@@ -38,16 +38,12 @@ class LoginController extends StateNotifier<LoginGeneric> {
         BotToast.showText(text: "Welcome to Enigma");
         final String? deviceToken = await FirebaseMessaging.instance.getToken();
 
-        preferenceManager.insertValue<bool>(
-            key: SharedPreferenceKeys.AUTH_STATE, data: true);
-        preferenceManager.insertValue<String>(
-            key: SharedPreferenceKeys.USER_UID, data: right.uid);
-        preferenceManager.insertValue<String>(
-            key: SharedPreferenceKeys.USER_EMAIL, data: right.email ?? "");
+        preferenceManager.insertValue<bool>(key: SharedPreferenceKeys.AUTH_STATE, data: true);
+        preferenceManager.insertValue<String>(key: SharedPreferenceKeys.USER_UID, data: right.uid);
+        preferenceManager.insertValue<String>(key: SharedPreferenceKeys.USER_EMAIL, data: right.email ?? "");
 
         await ref.read(profileProvider.notifier).readProfile(right.uid);
-        ProfileEntity userProfile =
-            ref.read(profileProvider).profileEntity ?? ProfileEntity();
+        ProfileEntity userProfile = ref.read(profileProvider).profileEntity ?? ProfileEntity();
         userProfile.isActive = true;
         userProfile.deviceToken = deviceToken;
         if (userProfile.email != right.email) userProfile.email = right.email;
@@ -63,4 +59,7 @@ class LoginController extends StateNotifier<LoginGeneric> {
     state = state.update(isLoading: false);
     return isSuccess;
   }
+
+
+
 }
