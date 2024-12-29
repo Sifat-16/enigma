@@ -134,10 +134,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validationTrackerController: validationTrackerController,
                   validTrackers: [
                     ValidationTrackerModel(
-                        regExp: RegExp(r'[a-z]'), message: "Must contain a lower case letter"),
+                      regExp: RegExp(r'[a-z]'),
+                      message: "Must contain a lower case letter",
+                    ),
                     ValidationTrackerModel(
-                        regExp: RegExp(r'[A-Z]'), message: "Must contain a upper case letter"),
-                    ValidationTrackerModel(regExp: RegExp(r'[0-9]'), message: "Must contain a number"),
+                      regExp: RegExp(r'[A-Z]'),
+                      message: "Must contain a upper case letter",
+                    ),
+                    ValidationTrackerModel(
+                      regExp: RegExp(r'[0-9]'),
+                      message: "Must contain a number",
+                    ),
                   ],
                 ),
                 // ListTile(

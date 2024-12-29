@@ -19,6 +19,8 @@ import 'package:enigma/src/features/chat_request/domain/usecases/fetch_friends_u
 import 'package:enigma/src/features/chat_request/domain/usecases/fetch_pending_request_usecase.dart';
 import 'package:enigma/src/features/chat_request/domain/usecases/remove_friend_usecase.dart';
 import 'package:enigma/src/features/chat_request/domain/usecases/send_chat_request_usecase.dart';
+import 'package:enigma/src/features/message/data/repository/message_repository_impl.dart';
+import 'package:enigma/src/features/message/domain/usecases/message_use_case.dart';
 import 'package:enigma/src/features/profile/data/repository/profile_repository_impl.dart';
 import 'package:enigma/src/features/profile/domain/usecases/create_profile_usecase.dart';
 import 'package:enigma/src/features/profile/domain/usecases/delete_profile_usecase.dart';
@@ -75,6 +77,9 @@ Future<void> setupService() async {
 
   sl.registerSingleton<MediaRepositoryImpl>(MediaRepositoryImpl());
   sl.registerSingleton<ImageMediaUsecase>(ImageMediaUsecase());
+
+  sl.registerSingleton<MessageRepositoryImpl>(MessageRepositoryImpl());
+  sl.registerSingleton<MessageUseCase>(MessageUseCase());
 
   sl.registerSingleton<ChatRepositoryImpl>(ChatRepositoryImpl());
   sl.registerSingleton<AddChatUsecase>(AddChatUsecase());

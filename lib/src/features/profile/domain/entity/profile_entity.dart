@@ -1,3 +1,6 @@
+import 'package:enigma/src/features/chat/data/model/chat_model.dart';
+import 'package:enigma/src/features/chat/domain/entity/chat_entity.dart';
+import 'package:enigma/src/features/message/data/model/message_model.dart';
 import 'package:enigma/src/features/profile/data/model/profile_model.dart';
 import 'package:enigma/src/features/story/domain/entity/story_entity.dart';
 
@@ -13,6 +16,7 @@ class ProfileEntity {
   bool? isActive;
   List<StoryEntity>? listOfStories;
   String? deviceToken;
+  ChatModel? lastMessage;
 
   ProfileEntity({
     this.uid,
@@ -26,6 +30,7 @@ class ProfileEntity {
     this.isActive,
     this.listOfStories,
     this.deviceToken,
+    this.lastMessage,
   });
 
   // Method to convert a ProfileEntity instance to a JSON object

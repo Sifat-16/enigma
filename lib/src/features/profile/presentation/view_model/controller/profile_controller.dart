@@ -8,7 +8,10 @@ import 'package:enigma/src/core/network/responses/failure_response.dart';
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/auth/presentation/login/view/login_screen.dart';
+import 'package:enigma/src/features/chat/data/model/chat_model.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_controller.dart';
+import 'package:enigma/src/features/message/domain/dto/message_dto.dart';
+import 'package:enigma/src/features/message/domain/usecases/message_use_case.dart';
 import 'package:enigma/src/features/profile/domain/dto/filter_dto.dart';
 import 'package:enigma/src/features/profile/domain/entity/profile_entity.dart';
 import 'package:enigma/src/features/profile/domain/usecases/create_profile_usecase.dart';
@@ -22,25 +25,23 @@ import 'package:enigma/src/shared/domain/use_cases/base_use_case.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final profileProvider =
-    StateNotifierProvider<ProfileController, ProfileGeneric>(
-        (ref) => ProfileController(ref));
+    StateNotifierProvider<ProfileController, ProfileGeneric>((ref) => ProfileController(ref));
 
 class ProfileController extends StateNotifier<ProfileGeneric> {
   ProfileController(this.ref) : super(ProfileGeneric());
   Ref ref;
-  SharedPreferenceManager sharedPreferenceManager =
-      sl.get<SharedPreferenceManager>();
+  SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
 
   CreateProfileUseCase createProfileUseCase = sl.get<CreateProfileUseCase>();
   ReadProfileUseCase readProfileUseCase = sl.get<ReadProfileUseCase>();
   UpdateProfileUseCase updateProfileUseCase = sl.get<UpdateProfileUseCase>();
   ReadAllPeopleUseCase readAllPeopleUseCase = sl.get<ReadAllPeopleUseCase>();
   ReadAllProfileUseCase readAllProfileUseCase = sl.get<ReadAllProfileUseCase>();
+  MessageUseCase messageUseCase = sl.get<MessageUseCase>();
 
   Future<bool> createProfile(ProfileEntity profileEntity) async {
     bool isSuccess = false;
-    Either<Failure, ProfileEntity> response =
-        await createProfileUseCase.call(profileEntity);
+    Either<Failure, ProfileEntity> response = await createProfileUseCase.call(profileEntity);
     response.fold(
       (left) {
         BotToast.showText(text: left.message);
@@ -55,8 +56,7 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
   }
 
   updateProfile(ProfileEntity profileEntity) async {
-    Either<Failure, ProfileEntity> response =
-        await updateProfileUseCase.call(profileEntity);
+    Either<Failure, ProfileEntity> response = await updateProfileUseCase.call(profileEntity);
     response.fold(
       (left) {
         BotToast.showText(text: left.message);
@@ -70,8 +70,7 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
   readProfile(String uid) async {
     ProfileEntity profileEntity = ProfileEntity();
     state = state.update(isLoading: true);
-    Either<Failure, ProfileEntity> response =
-        await readProfileUseCase.call(uid);
+    Either<Failure, ProfileEntity> response = await readProfileUseCase.call(uid);
     response.fold((left) {
       BotToast.showText(text: left.message);
     }, (right) {
@@ -89,8 +88,7 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
     );
     FilterDto params = FilterDto(firebaseWhereModel: whereModel);
     bool isSuccess = false;
-    Either<Failure, List<ProfileEntity>> response =
-        await readAllPeopleUseCase.call(params);
+    Either<Failure, List<ProfileEntity>> response = await readAllPeopleUseCase.call(params);
     response.fold(
       (left) {
         BotToast.showText(text: left.message);
@@ -109,8 +107,7 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
   Future<bool> readAllProfile() async {
     state = state.update(isLoading: true);
     bool isSuccess = false;
-    Either<Failure, List<ProfileEntity>> response =
-        await readAllProfileUseCase.call(NoParams());
+    Either<Failure, List<ProfileEntity>> response = await readAllProfileUseCase.call(NoParams());
     response.fold(
       (left) {
         BotToast.showText(text: left.message);
@@ -130,26 +127,33 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
       whereIn: allUid.toList(),
     );
     FilterDto params = FilterDto(firebaseWhereModel: whereModel);
-    Either<Failure, List<ProfileEntity>> response =
-        await readAllPeopleUseCase.call(params);
+    Either<Failure, List<ProfileEntity>> response = await readAllPeopleUseCase.call(params);
     response.fold((left) {
       BotToast.showText(text: left.message);
-    }, (right) {
+    }, (right) async {
+      for (ProfileEntity element in right) {
+        String myUserID = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
+        MessageDTO messageDTO = MessageDTO(myUserID: myUserID, buddyUserID: element.uid ?? "");
+        Either<Failure, ChatModel> response = await messageUseCase.call(messageDTO);
+        response.fold(
+          (l) {},
+          (r) {
+            element.lastMessage = r;
+          },
+        );
+      }
       state = state.update(listOfFriends: right);
     });
   }
 
   List<ProfileEntity> filterAllPeople(List<ProfileEntity> people) {
-    List<ProfileEntity> chatRequests =
-        ref.read(chatRequestProvider).listOfChatRequest;
-    List<ProfileEntity> pendingRequests =
-        ref.read(chatRequestProvider).listOfPendingRequest;
+    List<ProfileEntity> chatRequests = ref.read(chatRequestProvider).listOfChatRequest;
+    List<ProfileEntity> pendingRequests = ref.read(chatRequestProvider).listOfPendingRequest;
     List<ProfileEntity> friends = state.listOfFriends;
 
     // removing chat requests from people
     Set<String?> chatRequestsUIds = chatRequests.map((e) => e.uid).toSet();
-    Set<String?> pendingRequestsUIds =
-        pendingRequests.map((e) => e.uid).toSet();
+    Set<String?> pendingRequestsUIds = pendingRequests.map((e) => e.uid).toSet();
     Set<String?> friendsUIds = friends.map((e) => e.uid).toSet();
     people.removeWhere((person) => chatRequestsUIds.contains(person.uid));
     people.removeWhere((person) => pendingRequestsUIds.contains(person.uid));
@@ -172,8 +176,7 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
         }
       case "phoneNumber":
         {
-          state = state.update(
-              phoneNumberEditInProgress: !state.phoneNumberEditInProgress);
+          state = state.update(phoneNumberEditInProgress: !state.phoneNumberEditInProgress);
           break;
         }
     }
@@ -184,8 +187,7 @@ class ProfileController extends StateNotifier<ProfileGeneric> {
   }
 
   getInitialThemeMode() {
-    bool isLightMode = sharedPreferenceManager.getValue(
-        key: SharedPreferenceKeys.IS_LIGHT_MODE);
+    bool isLightMode = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.IS_LIGHT_MODE);
     state = state.update(isLightMode: isLightMode);
     debug("in controller $isLightMode");
   }

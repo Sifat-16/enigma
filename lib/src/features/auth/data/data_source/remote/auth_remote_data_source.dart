@@ -6,42 +6,35 @@ import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthRemoteDataSource {
-  Future<Either<Failure, User>> signUp(
-      {required String email, required String password}) async {
+  Future<Either<Failure, User>> signUp({required String email, required String password}) async {
     Failure failure;
     try {
-      UserCredential userCredential = await FirebaseHandler.auth
-          .createUserWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential =
+          await FirebaseHandler.auth.createUserWithEmailAndPassword(email: email, password: password);
       await userCredential.user!.sendEmailVerification();
       return Right(userCredential.user!);
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'email-already-in-use':
-          failure = Failure(
-              message:
-                  'The email address is already in use by another account.');
+          failure = Failure(message: 'The email address is already in use by another account.');
           break;
         case 'invalid-email':
           failure = Failure(message: 'The email address is not valid.');
           break;
         case 'operation-not-allowed':
-          failure =
-              Failure(message: 'Email/password accounts are not enabled.');
+          failure = Failure(message: 'Email/password accounts are not enabled.');
           break;
         case 'weak-password':
           failure = Failure(message: 'The password is too weak.');
           break;
         case 'too-many-requests':
-          failure =
-              Failure(message: 'Too many requests. Please try again later.');
+          failure = Failure(message: 'Too many requests. Please try again later.');
           break;
         case 'network-request-failed':
-          failure =
-              Failure(message: 'Network error. Please check your connection.');
+          failure = Failure(message: 'Network error. Please check your connection.');
           break;
         case 'user-token-expired':
-          failure = Failure(
-              message: 'Your session has expired. Please log in again.');
+          failure = Failure(message: 'Your session has expired. Please log in again.');
           break;
         default:
           failure = Failure(message: 'An unknown error occurred.');
@@ -51,17 +44,15 @@ class AuthRemoteDataSource {
     return Left(failure);
   }
 
-  Future<Either<Failure, User>> signIn(
-      {required String email, required String password}) async {
+  Future<Either<Failure, User>> signIn({required String email, required String password}) async {
     Failure failure;
     try {
-      UserCredential userCredential = await FirebaseHandler.auth
-          .signInWithEmailAndPassword(email: email, password: password);
+      UserCredential userCredential =
+          await FirebaseHandler.auth.signInWithEmailAndPassword(email: email, password: password);
 
       if (!userCredential.user!.emailVerified) {
         // If email is not verified, return failure
-        failure = Failure(
-            message: 'Email is not verified. Please verify your email.');
+        failure = Failure(message: 'Email is not verified. Please verify your email.');
         return Left(failure);
       }
       return Right(userCredential.user!);
@@ -80,20 +71,16 @@ class AuthRemoteDataSource {
           failure = Failure(message: 'Incorrect password. Please try again.');
           break;
         case 'too-many-requests':
-          failure =
-              Failure(message: 'Too many requests. Please try again later.');
+          failure = Failure(message: 'Too many requests. Please try again later.');
           break;
         case 'network-request-failed':
-          failure =
-              Failure(message: 'Network error. Please check your connection.');
+          failure = Failure(message: 'Network error. Please check your connection.');
           break;
         case 'user-token-expired':
-          failure = Failure(
-              message: 'Your session has expired. Please log in again.');
+          failure = Failure(message: 'Your session has expired. Please log in again.');
           break;
         case 'operation-not-allowed':
-          failure =
-              Failure(message: 'Email/password accounts are not enabled.');
+          failure = Failure(message: 'Email/password accounts are not enabled.');
           break;
         case 'invalid-credential':
           failure = Failure(message: 'Invalid login credentials.');
@@ -117,8 +104,7 @@ class AuthRemoteDataSource {
     return Left(failure);
   }
 
-  Future<Either<Failure, Success>> changePassword(
-      {required String password}) async {
+  Future<Either<Failure, Success>> changePassword({required String password}) async {
     Failure failure;
     try {
       await FirebaseHandler.auth.currentUser!.updatePassword(password);
@@ -129,12 +115,10 @@ class AuthRemoteDataSource {
           failure = Failure(message: 'The new password is too weak.');
           break;
         case 'requires-recent-login':
-          failure = Failure(
-              message: 'Please re-authenticate to change your password.');
+          failure = Failure(message: 'Please re-authenticate to change your password.');
           break;
         case 'network-request-failed':
-          failure =
-              Failure(message: 'Network error. Please check your connection.');
+          failure = Failure(message: 'Network error. Please check your connection.');
           break;
         default:
           failure = Failure(message: 'An unknown error occurred.');
@@ -156,17 +140,13 @@ class AuthRemoteDataSource {
           failure = Failure(message: 'The email address is not valid.');
           break;
         case 'email-already-in-use':
-          failure = Failure(
-              message:
-                  'The email address is already in use by another account.');
+          failure = Failure(message: 'The email address is already in use by another account.');
           break;
         case 'requires-recent-login':
-          failure =
-              Failure(message: 'Please re-authenticate to update your email.');
+          failure = Failure(message: 'Please re-authenticate to update your email.');
           break;
         case 'network-request-failed':
-          failure =
-              Failure(message: 'Network error. Please check your connection.');
+          failure = Failure(message: 'Network error. Please check your connection.');
           break;
         default:
           debug("errorrr");
@@ -178,8 +158,7 @@ class AuthRemoteDataSource {
   }
 
   /// Forgot Password
-  Future<Either<Failure, Success>> forgotPassword(
-      {required String email}) async {
+  Future<Either<Failure, Success>> forgotPassword({required String email}) async {
     try {
       await FirebaseHandler.auth.sendPasswordResetEmail(email: email);
       return Right(Success(message: 'Password reset email sent successfully to $email.'));
@@ -190,11 +169,9 @@ class AuthRemoteDataSource {
         case 'user-not-found':
           return Left(Failure(message: 'No user found for that email.'));
         case 'too-many-requests':
-          return Left(
-              Failure(message: 'Too many requests. Please try again later.'));
+          return Left(Failure(message: 'Too many requests. Please try again later.'));
         case 'network-request-failed':
-          return Left(
-              Failure(message: 'Network error. Please check your connection.'));
+          return Left(Failure(message: 'Network error. Please check your connection.'));
         default:
           return Left(Failure(message: 'An unknown error occurred.'));
       }

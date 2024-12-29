@@ -7,11 +7,16 @@ import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/chat_utils/chat_utils.dart';
 import 'package:enigma/src/core/utils/extension/context_extension.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
+import 'package:enigma/src/features/chat/domain/entity/chat_entity.dart';
 import 'package:enigma/src/features/chat/presentation/components/chat_screen_bottom_bar.dart';
 import 'package:enigma/src/features/chat/presentation/view/chat_screen.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_controller.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_generic.dart';
+import 'package:enigma/src/features/message/data/model/message_model.dart';
 import 'package:enigma/src/features/message/domain/entity/message_entity.dart';
+import 'package:enigma/src/features/message/presentation/components/chat_section.dart';
+import 'package:enigma/src/features/message/presentation/components/story_section.dart';
+import 'package:enigma/src/features/message/presentation/view_model/messagee_controller.dart';
 import 'package:enigma/src/features/profile/presentation/view/settings_screen.dart';
 import 'package:enigma/src/features/profile/presentation/view_model/controller/profile_controller.dart';
 import 'package:enigma/src/features/profile/presentation/view_model/generic/profile_generic.dart';
@@ -25,13 +30,16 @@ import 'package:enigma/src/shared/widgets/shared_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 class MessageScreen extends ConsumerStatefulWidget {
   MessageScreen({
     super.key,
   });
+
   MessageEntity? messageEntity;
   static const route = "/message";
+
   static setRoute() => "/message";
 
   @override
@@ -40,8 +48,7 @@ class MessageScreen extends ConsumerStatefulWidget {
 
 class _MessageScreenState extends ConsumerState<MessageScreen> {
   File? imageFile;
-  SharedPreferenceManager sharedPreferenceManager =
-      sl.get<SharedPreferenceManager>();
+  SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
   List<String> storyNames = [];
 
   @override
@@ -54,19 +61,18 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
   }
 
   init() async {
-    await ref.read(profileProvider.notifier).readProfile(
-        sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID));
+    await ref
+        .read(profileProvider.notifier)
+        .readProfile(sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID));
     await ref.read(chatRequestProvider.notifier).fetchFriends();
     await ref.read(storyProvider.notifier).getStories(
-        uid: sharedPreferenceManager.getValue(
-            key: SharedPreferenceKeys.USER_UID),
-        isMyStory: true);
+        uid: sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID), isMyStory: true);
     await ref.read(profileProvider.notifier).readAllProfile();
   }
 
   @override
   Widget build(BuildContext context) {
-    StoryGeneric storyController = ref.watch(storyProvider);
+
     return Scaffold(
         //backgroundColor: Theme.of(context).colorScheme.secondary,
         appBar: SharedAppbar(
@@ -97,9 +103,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                   padding: const EdgeInsets.all(8),
                   child: CircularDisplayPicture(
                     radius: 30,
-                    imageURL:
-                        ref.read(profileProvider).profileEntity?.avatarUrl ??
-                            "",
+                    imageURL: ref.read(profileProvider).profileEntity?.avatarUrl ?? "",
                   ),
                 ),
               )
@@ -114,8 +118,8 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  buildStorySection(context, storyController),
-                  buildChatSection(context)
+                  const StorySection(),
+                  const ChatSection(),
                 ],
               ),
             ),
@@ -128,124 +132,143 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
     return "${difference.inMinutes.toString()} mins ago";
   }
 
-  Widget buildChatSection(BuildContext context) {
-    final ChatRequestGeneric chatRequestController =
-        ref.watch(chatRequestProvider);
-    final ProfileGeneric profileController = ref.watch(profileProvider);
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemBuilder: (context, index) {
-        return InkWell(
-          onTap: () {
-            ref.read(goRouterProvider).push(ChatScreen.setRoute(),
-                extra: profileController.listOfFriends[index]);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 10,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Flexible(
-                  flex: 5,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Flexible(
-                        flex: 1,
-                        child: Stack(
-                          children: [
-                            CircularDisplayPicture(
-                              radius: 23,
-                              imageURL: profileController
-                                      .listOfFriends[index].avatarUrl ??
-                                  null,
-                            ),
-                            Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Icon(
-                                  Icons.circle,
-                                  color: (profileController
-                                              .listOfFriends[index].isActive ??
-                                          false)
-                                      ? Colors.green
-                                      : Colors.transparent,
-                                  size: 15,
-                                ))
-                          ],
-                        ),
-                      ),
-                      Flexible(
-                        flex: 4,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                profileController.listOfFriends[index].name ??
-                                    "",
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              Text("How are you doing today?",
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.labelSmall)
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Flexible(
-                  flex: 1,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Text(
-                        (profileController.listOfFriends[index].isActive ??
-                                false)
-                            ? ""
-                            : getLastSeen(profileController
-                                    .listOfFriends[index].lastSeen ??
-                                DateTime.now()),
-                        style: Theme.of(context).textTheme.labelSmall,
-                      )
-                      //todo : add when message is fixed
-                      // const CircleAvatar(
-                      //   backgroundColor: Colors.green,
-                      //   radius: 10,
-                      //   child: Text(
-                      //     "3",
-                      //     style: TextStyle(fontSize: 10),
-                      //   ),
-                      // )
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-        );
-      },
-      itemCount: profileController.listOfFriends.length,
-      separatorBuilder: (BuildContext context, int index) {
-        return const SizedBox(
-          height: 5,
-        );
-      },
-    );
-  }
+  // Widget buildChatSection(BuildContext context) {
+  //   SharedPreferenceManager sharedPreferenceManager = sl.get<SharedPreferenceManager>();
+  //   final ChatRequestGeneric chatRequestController = ref.watch(chatRequestProvider);
+  //   final ProfileGeneric profileController = ref.watch(profileProvider);
+  //   final messageController = ref.watch(messageProvider);
+  //   return ListView.separated(
+  //     shrinkWrap: true,
+  //     physics: const NeverScrollableScrollPhysics(),
+  //     itemBuilder: (context, index) {
+  //       return InkWell(
+  //           onTap: () {
+  //             ref
+  //                 .read(goRouterProvider)
+  //                 .push(ChatScreen.setRoute(), extra: profileController.listOfFriends[index]);
+  //           },
+  //           child: Container(
+  //             padding: const EdgeInsets.symmetric(
+  //               horizontal: 20,
+  //               vertical: 10,
+  //             ),
+  //             child: Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Flexible(
+  //                   flex: 5,
+  //                   child: Row(
+  //                     crossAxisAlignment: CrossAxisAlignment.start,
+  //                     children: [
+  //                       Flexible(
+  //                         flex: 1,
+  //                         child: Stack(
+  //                           children: [
+  //                             CircularDisplayPicture(
+  //                               radius: 23,
+  //                               imageURL: profileController.listOfFriends[index].avatarUrl ?? null,
+  //                             ),
+  //                             Positioned(
+  //                                 right: 0,
+  //                                 bottom: 0,
+  //                                 child: Icon(
+  //                                   Icons.circle,
+  //                                   color: (profileController.listOfFriends[index].isActive ?? false)
+  //                                       ? Colors.green
+  //                                       : Colors.transparent,
+  //                                   size: 15,
+  //                                 ))
+  //                           ],
+  //                         ),
+  //                       ),
+  //                       // FutureBuilder(
+  //                       //   future: ref
+  //                       //       .read(messageProvider.notifier)
+  //                       //       .getAllFriendsLastMessage(friends: profileController.listOfFriends, myID: "myID"),
+  //                       //   builder: (context, snapshot) {
+  //                       //     return Text("${snapshot.hasData}");
+  //                       //   },
+  //                       // )
+  //                       Flexible(
+  //                         flex: 4,
+  //                         child: Padding(
+  //                           padding: const EdgeInsets.only(left: 10, right: 10),
+  //                           child: Column(
+  //                             crossAxisAlignment: CrossAxisAlignment.start,
+  //                             children: [
+  //                               Text(
+  //                                 profileController.listOfFriends[index].name ?? "",
+  //                                 style: Theme.of(context)
+  //                                     .textTheme
+  //                                     .titleLarge
+  //                                     ?.copyWith(fontWeight: FontWeight.bold),
+  //                               ),
+  //                               if (profileController.listOfFriends[index].lastMessage?.type == MediaType.text.name)
+  //                                 Text("${profileController.listOfFriends[index].lastMessage?.content}",
+  //                                     maxLines: 2,
+  //                                     overflow: TextOverflow.ellipsis,
+  //                                     style: Theme.of(context).textTheme.labelSmall)
+  //                               else
+  //                                 Text(
+  //                                     "${profileController.listOfFriends[index].lastMessage?.type!.toUpperCase()} MESSAGE",
+  //                                     maxLines: 2,
+  //                                     overflow: TextOverflow.ellipsis,
+  //                                     style: Theme.of(context).textTheme.labelSmall)
+  //                             ],
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //                 Flexible(
+  //                   flex: 2,
+  //                   child: Column(
+  //                     crossAxisAlignment: CrossAxisAlignment.end,
+  //                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //                     children: [
+  //                       Text(
+  //                         DateFormat.jm().format(
+  //                           profileController.listOfFriends[index].lastMessage!.timestamp!,
+  //                         ),
+  //                       ),
+  //                       Text(
+  //                         DateFormat.yMd().format(
+  //                           profileController.listOfFriends[index].lastMessage!.timestamp!,
+  //                         ),
+  //                       )
+  //                       // Text(
+  //                       //   (profileController.listOfFriends[index].isActive ?? false)
+  //                       //       ? ""
+  //                       //       : getLastSeen(
+  //                       //           profileController.listOfFriends[index].lastSeen ?? DateTime.now()),
+  //                       //   style: Theme.of(context).textTheme.labelSmall,
+  //                       // )
+  //                       //todo : add when message is fixed
+  //                       // const CircleAvatar(
+  //                       //   backgroundColor: Colors.green,
+  //                       //   radius: 10,
+  //                       //   child: Text(
+  //                       //     "3",
+  //                       //     style: TextStyle(fontSize: 10),
+  //                       //   ),
+  //                       // )
+  //                     ],
+  //                   ),
+  //                 )
+  //               ],
+  //             ),
+  //           ));
+  //     },
+  //     itemCount: profileController.listOfFriends.length,
+  //     separatorBuilder: (BuildContext context, int index) {
+  //       return const SizedBox(
+  //         height: 5,
+  //       );
+  //     },
+  //   );
+  // }
 
   void _showOptions(BuildContext context, bool showViewStory) {
     showBottomSheet(
@@ -272,9 +295,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 );
 
                 if (imageFile != null) {
-                  ref
-                      .read(goRouterProvider)
-                      .push(StoryPreviewScreen.route, extra: imageFile);
+                  ref.read(goRouterProvider).push(StoryPreviewScreen.route, extra: imageFile);
                 }
 
                 debug(imageFile?.path ?? "");
@@ -290,9 +311,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                 );
 
                 if (imageFile != null) {
-                  ref
-                      .read(goRouterProvider)
-                      .push(StoryPreviewScreen.route, extra: imageFile);
+                  ref.read(goRouterProvider).push(StoryPreviewScreen.route, extra: imageFile);
                 }
 
                 debug(imageFile?.path ?? "");
@@ -313,8 +332,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
       width: double.infinity,
       child: ListView.builder(
         itemBuilder: (context, index) {
-          String uid = sharedPreferenceManager.getValue(
-              key: SharedPreferenceKeys.USER_UID);
+          String uid = sharedPreferenceManager.getValue(key: SharedPreferenceKeys.USER_UID);
           if (index == 0) {
             if ((storyController.myStory?.storyList ?? []).isEmpty) {
               return InkWell(
@@ -338,8 +356,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
                                 bottom: 0,
                                 child: Container(
                                   decoration: BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.circular(500)),
+                                      color: Colors.black, borderRadius: BorderRadius.circular(500)),
                                   child: const Icon(
                                     Icons.add_circle_rounded,
                                     color: Colors.white,
@@ -397,9 +414,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
             return InkWell(
               onTap: () {
                 // can send index,
-                ref
-                    .read(goRouterProvider)
-                    .push(StoryScreen.setRoute(index - 1));
+                ref.read(goRouterProvider).push(StoryScreen.setRoute(index - 1));
               },
               child: Padding(
                 padding: const EdgeInsets.all(6.0),

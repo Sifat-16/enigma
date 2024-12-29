@@ -189,7 +189,6 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                           debug(widget.receiver);
                           audioFile.value = null;
                           ref.read(chatProvider.notifier).addChat(chatEntity);
-
                         },
                         icon: const Icon(Icons.send),
                       ),
@@ -331,18 +330,15 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
   }
 }
 
-Widget filesOption({
-  required String title,
-  String subtitle = "",
-  required Function() onTap,
-  required IconData icon,
-}) =>
-    ListTile(
-      onTap: onTap,
-      leading: CircleAvatar(
-        child: Icon(icon),
-        // backgroundColor: primary.withOpacity(0.5),
-      ),
-      title: Text(title),
-      subtitle: Text(subtitle),
-    );
+Widget filesOption(
+    {required String title, String subtitle = "", required Function() onTap, required IconData icon}) {
+  return ListTile(
+    onTap: onTap,
+    leading: CircleAvatar(
+      child: Icon(icon),
+      // backgroundColor: primary.withOpacity(0.5),
+    ),
+    title: Text(title),
+    subtitle: Text(subtitle),
+  );
+}

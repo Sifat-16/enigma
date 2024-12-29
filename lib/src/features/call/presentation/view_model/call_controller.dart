@@ -156,23 +156,23 @@ class CallController extends StateNotifier<CallGeneric> {
     state = state.update(switchCamera: !state.switchCamera);
   }
 
-  openCamera() async {
+  Future<void> openCamera() async {
     await state.engine?.enableLocalVideo(!state.openCamera);
     state = state.update(openCamera: !state.openCamera);
   }
 
-  muteLocalAudioStream() async {
+  Future<void> muteLocalAudioStream() async {
     await state.engine?.muteLocalAudioStream(!state.muteVoice);
     state = state.update(muteVoice: !state.muteVoice);
   }
 
-  muteLocalVideoStream() async {
+  Future<void> muteLocalVideoStream() async {
     await state.engine?.muteLocalVideoStream(!state.muteCamera);
 
     state = state.update(muteCamera: !state.muteCamera);
   }
 
-  muteAllRemoteVideoStreams() async {
+  Future<void> muteAllRemoteVideoStreams() async {
     await state.engine?.muteAllRemoteVideoStreams(!state.muteAllRemoteVideo);
     state = state.update(muteAllRemoteVideo: !state.muteAllRemoteVideo);
   }
