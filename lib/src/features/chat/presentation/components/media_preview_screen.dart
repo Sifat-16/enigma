@@ -10,12 +10,16 @@ class MediaPreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image(
-      image: FileImage(file),
-      width: context.width,
-      fit: BoxFit.contain,
-      alignment: Alignment.bottomCenter,
-      errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Image(
+        image: FileImage(file),
+        height: context.height * 0.7,
+        width: context.width,
+        fit: BoxFit.cover,
+        alignment: Alignment.bottomCenter,
+        errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported),
+      ),
     );
   }
 }

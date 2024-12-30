@@ -114,12 +114,12 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
           },
           child: ListView.builder(
             itemCount: 1,
-            itemBuilder: (context, index) => SingleChildScrollView(
+            itemBuilder: (context, index) => const SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  const StorySection(),
-                  const ChatSection(),
+                  StorySection(),
+                  ChatSection(),
                 ],
               ),
             ),
@@ -129,7 +129,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
 
   String getLastSeen(DateTime lastSeen) {
     Duration difference = DateTime.now().difference(lastSeen);
-    return "${difference.inMinutes.toString()} mins ago";
+    return "${difference.inMinutes.toString()} minutes ago";
   }
 
   // Widget buildChatSection(BuildContext context) {

@@ -6,12 +6,15 @@ import 'package:enigma/src/core/network/remote/firebase/firebase_storage_directo
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/chat_utils/chat_utils.dart';
 import 'package:enigma/src/core/utils/extension/context_extension.dart';
+import 'package:enigma/src/core/utils/loading_controll/loading_handler.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/chat/domain/entity/chat_entity.dart';
 import 'package:enigma/src/features/chat/presentation/components/media_preview_screen.dart';
 import 'package:enigma/src/features/chat/presentation/components/voice_message_view.dart';
 import 'package:enigma/src/features/chat/presentation/view-model/chat_controller.dart';
 import 'package:enigma/src/features/chat_request/presentation/view_model/chat_request_controller.dart';
+import 'package:enigma/src/features/profile/domain/entity/profile_entity.dart';
+import 'package:enigma/src/features/profile/presentation/view_model/controller/profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,6 +26,7 @@ class ChatScreenBottomBar extends ConsumerStatefulWidget {
     super.key,
     required this.sender,
     required this.receiver,
+
   });
 
   final String sender;
@@ -101,7 +105,7 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
 
   @override
   Widget build(BuildContext context) {
-    // final chatController = ref.watch(chatProvider);
+    final chatController = ref.watch(chatProvider);
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
@@ -126,6 +130,7 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                         child: IconButton(
                           onPressed: () {
                             imageFile.value = null;
+                            messageTextController.value.text = "";
                           },
                           icon: const Icon(
                             Icons.delete,
@@ -143,9 +148,13 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
               valueListenable: isRecording,
               builder: (context, value, child) {
                 if (value) {
-                  return Row(
+                  return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Text(
+                        "${chatController.timer}\n",
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
                       const Icon(Icons.mic),
                       Text(
                         "Say Something",
@@ -166,14 +175,25 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      VoiceMessageViewWidget(
-                        url: audioFile.value?.path ?? "",
-                        isFile: true,
+                      IconButton(
+                        onPressed: () {
+                          audioFile.value = null;
+                        },
+                        icon: const Icon(Icons.delete, color: Colors.red,),
+                      ),
+                      Expanded(
+                        child: VoiceMessageViewWidget(
+                          url: audioFile.value?.path ?? "",
+                          isFile: true,
+                        ),
                       ),
                       IconButton(
                         onPressed: () async {
+                          LoadingHandler.showLoading();
+                          File? temporaryFile = audioFile.value;
+                          audioFile.value = null;
                           url = await ref.read(chatProvider.notifier).addImageMedia(
-                                file: audioFile.value!,
+                                file: temporaryFile!,
                                 directory: FirebaseStorageDirectoryName.CHAT_MEDIA_DIRECTORY,
                                 fileName: const Uuid().v4(),
                               );
@@ -189,6 +209,7 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                           debug(widget.receiver);
                           audioFile.value = null;
                           ref.read(chatProvider.notifier).addChat(chatEntity);
+                          LoadingHandler.hideLoading();
                         },
                         icon: const Icon(Icons.send),
                       ),
@@ -215,7 +236,8 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                 Expanded(
                   child: TextFormField(
                     controller: messageTextController.value,
-                    maxLines: null,
+                    maxLines: 5,
+                    minLines: 1,
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
@@ -262,12 +284,15 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                           ),
                           GestureDetector(
                             onLongPressStart: (details) {
+                              ref.read(chatProvider.notifier).startVoiceTimer();
                               audioFile.value = null;
                               isRecording.value = true;
                               ChatUtils.startRecord(record);
                             },
                             onLongPressEnd: (details) async {
+                              ref.read(chatProvider.notifier).stopVoiceTimer();
                               path = await record.stop();
+
                               if (path != null) {
                                 audioFile.value = File(path!);
                               }
@@ -287,17 +312,24 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                       return GestureDetector(
                         onTap: () async {
                           Uuid uuid = const Uuid();
-                          if (imageFile.value != null) {
+                          File? temporaryFile = imageFile.value;
+
+                          imageFile.value = null;
+                          String message = messageTextController.value.text.trim();
+                          messageTextController.value.text = "";
+                          if (temporaryFile != null) {
+                            LoadingHandler.showLoading();
                             url = await ref.read(chatProvider.notifier).addImageMedia(
-                                  file: imageFile.value!,
+                                  file: temporaryFile,
                                   directory: FirebaseStorageDirectoryName.CHAT_MEDIA_DIRECTORY,
-                                  fileName: imageFile.value!.path.split("/").last,
+                                  fileName: temporaryFile.path.split("/").last,
                                 );
+                            LoadingHandler.hideLoading();
                           }
-                          if (messageTextController.value.text.trim().isNotEmpty || imageFile.value != null) {
+                          if (message.isNotEmpty || temporaryFile != null) {
                             ChatEntity chatEntity = ChatEntity(
                               id: uuid.v4(),
-                              content: messageTextController.value.text.trim(),
+                              content: message,
                               type: url != null ? MediaType.image : MediaType.text,
                               mediaLink: url,
                               timestamp: DateTime.now(),
@@ -306,8 +338,7 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                             );
                             imageFile.value = null;
                             messageTextController.value.clear();
-                            ref.read(chatProvider.notifier).addChat(chatEntity);
-                            // debug("Success message");
+                            await ref.read(chatProvider.notifier).addChat(chatEntity);
                           }
                         },
                         child: CircleAvatar(

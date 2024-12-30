@@ -11,16 +11,19 @@ class ChatGeneric {
 
   InitialDataModel? incomingChatData;
   bool? isLoading;
+  String? timer;
 
   ChatGeneric({
     this.incomingChatData,
     this.isLoading,
+    this.timer = "Record Starting"
   });
 
-  ChatGeneric update({InitialDataModel? incomingChatData, bool? isLoading}) {
+  ChatGeneric update({InitialDataModel? incomingChatData, bool? isLoading, String? timer}) {
     return ChatGeneric(
       incomingChatData: incomingChatData ?? this.incomingChatData,
       isLoading: isLoading ?? this.isLoading,
+      timer: timer ?? this.timer,
     );
   }
 }

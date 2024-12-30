@@ -1,11 +1,9 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:voice_message_package/voice_message_package.dart';
 
 class VoiceMessageViewWidget extends StatefulWidget {
-  const VoiceMessageViewWidget(
-      {super.key, required this.url, required this.isFile});
+  const VoiceMessageViewWidget({super.key, required this.url, required this.isFile});
 
   final String url;
   final bool isFile;
@@ -16,35 +14,59 @@ class VoiceMessageViewWidget extends StatefulWidget {
 
 class _VoiceMessageViewState extends State<VoiceMessageViewWidget> {
   AudioPlayer player = AudioPlayer();
-  Duration? duration;
+  ValueNotifier<Duration?> duration = ValueNotifier<Duration>(const Duration(seconds: 0));
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback(
-      (t) async {
-        await player.setSource(UrlSource(widget.url ?? ""));
-        duration = await player.getDuration() ?? const Duration(seconds: 10);
-        debug(duration?.inSeconds);
-      },
-    );
     super.initState();
+    _initializeAudio();
+  }
+
+  Future<void> _initializeAudio() async {
+    if (widget.url.isNotEmpty) {
+      try {
+        if (widget.isFile) {
+          await player.setSourceDeviceFile(widget.url);
+        } else {
+          await player.setSourceUrl(widget.url);
+        }
+        Duration? audioDuration = await player.getDuration();
+        duration.value = audioDuration;
+        // setState(() {
+        //   duration = audioDuration;
+        // });
+      } catch (e) {
+        print("Error initializing audio: $e");
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return VoiceMessageView(
-      backgroundColor: Theme.of(context).colorScheme.secondary,
-      circlesColor: Theme.of(context).colorScheme.primary,
-      activeSliderColor: Theme.of(context).colorScheme.onPrimary,
-      // notActiveSliderColor:
-      //     Theme.of(context).colorScheme.primary.withOpacity(0.2),
-      controller: VoiceController(
-          audioSrc: widget.url,
-          isFile: widget.isFile,
-          maxDuration: duration ?? const Duration(seconds: 0),
-          onComplete: () {},
-          onPause: () {},
-          onPlaying: () {}),
+    return ValueListenableBuilder<Duration?>(
+      valueListenable: duration,
+      builder: (context, value, child) {
+        if(value == null) return const SizedBox.shrink();
+        return VoiceMessageView(
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          circlesColor: Theme.of(context).colorScheme.primary,
+          activeSliderColor: Theme.of(context).colorScheme.onPrimary,
+          controller: VoiceController(
+            audioSrc: widget.url,
+            isFile: widget.isFile,
+            maxDuration: value,
+            onComplete: () {},
+            onPause: () {},
+            onPlaying: () {},
+          ),
+        );
+      }
     );
+  }
+
+  @override
+  void dispose() {
+    player.dispose();
+    super.dispose();
   }
 }

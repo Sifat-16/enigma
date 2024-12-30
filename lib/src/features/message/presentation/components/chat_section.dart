@@ -25,7 +25,7 @@ class _ChatSectionState extends ConsumerState<ChatSection> {
   Widget build(BuildContext context) {
     final ChatRequestGeneric chatRequestController = ref.watch(chatRequestProvider);
     final ProfileGeneric profileController = ref.watch(profileProvider);
-    return ListView.separated(
+    return profileController.isLoading ? const Center(child: CircularProgressIndicator()) : ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (context, index) {

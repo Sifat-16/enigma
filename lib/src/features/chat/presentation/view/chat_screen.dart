@@ -1,3 +1,4 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:enigma/src/core/network/remote/firebase/firebase_handler.dart';
 import 'package:enigma/src/core/router/router.dart';
 import 'package:enigma/src/core/utils/extension/context_extension.dart';
@@ -30,6 +31,7 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final String userUid = FirebaseHandler.auth.currentUser?.uid ?? "";
 
+
   @override
   Widget build(BuildContext context) {
     //ProfileGeneric profileController = ref.watch(profileProvider);
@@ -37,34 +39,38 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final user = ref.watch(profileProvider);
     return Scaffold(
         appBar: SharedAppbar(
-          titleSpacing: -context.width * 0.04,
-          leadingWidget: InkWell(
-            onTap: () {
-              ref.read(goRouterProvider).pop();
-            },
-            child: const Icon(
-              Icons.arrow_back_outlined,
-              size: 25,
+          titleSpacing: -context.width * 0.03,
+          leadingWidget: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: InkWell(
+              onTap: () {
+                ref.read(goRouterProvider).pop();
+              },
+              child: const Icon(
+                Icons.arrow_back_outlined,
+                size: 25,
+              ),
             ),
           ),
-          title: InkWell(
-            onTap: () {
-              ref
-                  .read(goRouterProvider)
-                  .push(ProfileScreen.setRoute(), extra: profileEntity);
-            },
-            child: ListTile(
-              leading: CircularDisplayPicture(
-                radius: 23,
-                imageURL: profileEntity.avatarUrl ?? null,
-              ),
-              title: Text(
-                profileEntity.name ?? "",
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              subtitle: Text(
-                (profileEntity.isActive ?? false) ? "Active Now" : "",
-                style: Theme.of(context).textTheme.bodySmall,
+          title: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            child: InkWell(
+              onTap: () {
+                ref.read(goRouterProvider).push(ProfileScreen.setRoute(), extra: profileEntity);
+              },
+              child: ListTile(
+                leading: CircularDisplayPicture(
+                  radius: 23,
+                  imageURL: profileEntity.avatarUrl ?? null,
+                ),
+                title: Text(
+                  profileEntity.name ?? "",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                subtitle: Text(
+                  (profileEntity.isActive ?? false) ? "Active Now" : "",
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ),
             ),
           ),
@@ -77,7 +83,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         builder: (context) => CallScreen(
                               isCalling: true,
                               callModel: CallModel(
-                                channelId: "${userUid}${profileEntity.uid}",
+                                channelId: "$userUid${profileEntity.uid}",
                                 uid: 0,
                                 senderName: user.profileEntity?.name,
                                 senderAvatar: user.profileEntity?.avatarUrl,
@@ -108,7 +114,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         builder: (context) => CallScreen(
                               isCalling: true,
                               callModel: CallModel(
-                                channelId: "${userUid}${profileEntity.uid}",
+                                channelId: "$userUid${profileEntity.uid}",
                                 uid: 0,
                                 senderName: user.profileEntity?.name,
                                 senderAvatar: user.profileEntity?.avatarUrl,
@@ -151,8 +157,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           if (chatShot.hasData) {
                             return ChatUI(chat: chatShot.data ?? []);
                           } else {
-                            return const Center(
-                                child: Text('No messages found'));
+                            return const Center(child: Text('No messages found'));
                           }
 
                           // if (!snapshot.hasData || snapshot.data!.isEmpty) {

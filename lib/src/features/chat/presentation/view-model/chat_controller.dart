@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -28,12 +29,13 @@ final chatProvider = StateNotifierProvider<ChatController, ChatGeneric>(
 class ChatController extends StateNotifier<ChatGeneric> {
   ChatController(this.ref) : super(ChatGeneric());
   Ref ref;
+  int seconds = 0;
+  Timer? timer;
 
   AddChatUsecase addChatUsecase = sl.get<AddChatUsecase>();
   GetChatUsecase getChatUsecase = sl.get<GetChatUsecase>();
   ImageMediaUsecase imageMediaUsecase = sl.get<ImageMediaUsecase>();
-  SendPushMessageUsecase sendPushMessageUsecase =
-      sl.get<SendPushMessageUsecase>();
+  SendPushMessageUsecase sendPushMessageUsecase = sl.get<SendPushMessageUsecase>();
   ReadProfileUseCase readProfileUseCase = sl.get<ReadProfileUseCase>();
 
   Future<void> addChat(ChatEntity chatEntity) async {
@@ -48,18 +50,15 @@ class ChatController extends StateNotifier<ChatGeneric> {
     );
   }
 
-  Future<Stream<List<ChatEntity>>> getChat(
-      {required String myUid, required String friendUid}) async {
+  Future<Stream<List<ChatEntity>>> getChat({required String myUid, required String friendUid}) async {
     ChatRoomDto chatRoomDto = ChatRoomDto(myUid: myUid, friendUid: friendUid);
     final response = await getChatUsecase.call(chatRoomDto);
     // debug("From Chat Controller ${response.runtimeType}");
     return response;
   }
 
-  Future<Either<Failure, Success>> sendMessageNotification(
-      ChatEntity chatEntity) async {
-    Either<Failure, ProfileEntity> senderResponse =
-        await readProfileUseCase.call(chatEntity.sender ?? "");
+  Future<Either<Failure, Success>> sendMessageNotification(ChatEntity chatEntity) async {
+    Either<Failure, ProfileEntity> senderResponse = await readProfileUseCase.call(chatEntity.sender ?? "");
     Either<Failure, ProfileEntity> receiverResponse =
         await readProfileUseCase.call(chatEntity.receiver ?? "");
 
@@ -78,8 +77,7 @@ class ChatController extends StateNotifier<ChatGeneric> {
         body: jsonEncode(sender?.toJson()),
       ),
     );
-    Either<Failure, Success> response =
-        await sendPushMessageUsecase.call(fcmDto);
+    Either<Failure, Success> response = await sendPushMessageUsecase.call(fcmDto);
     return response;
   }
 
@@ -88,6 +86,7 @@ class ChatController extends StateNotifier<ChatGeneric> {
     required String directory,
     required String fileName,
   }) async {
+    state = state.update(isLoading: true);
     String? url;
     ImageMediaDto params = ImageMediaDto(
       file: file,
@@ -101,6 +100,32 @@ class ChatController extends StateNotifier<ChatGeneric> {
       debug(right.message);
       url = right.message;
     });
+    state = state.update(isLoading: false);
     return url;
+  }
+
+  void startVoiceTimer() {
+    try {
+      timer = Timer.periodic(
+        const Duration(seconds: 1),
+        (timer) {
+          seconds += 1;
+          String hour = (seconds ~/ 3600).toString().padLeft(2, '0');
+          String minute = ((seconds % 3600) ~/ 60).toString().padLeft(2, '0');
+          String second = (seconds % 60).toString().padLeft(2, '0');
+          debug("Timer $hour : $minute : $second");
+          state = state.update(timer: "$hour : $minute : $second");
+        },
+      );
+    } catch (e) {
+      debug("Timer Failed $e");
+    }
+  }
+
+  void stopVoiceTimer() {
+    seconds = 0;
+    state = state.update(timer: "Record Starting");
+    timer?.cancel();
+    timer = null;
   }
 }
