@@ -51,7 +51,7 @@ class ChatUtils {
     try {
       if (await record.hasPermission()) {
         final Directory appDocumentsDir = await getApplicationDocumentsDirectory();
-        await record.start(const RecordConfig(), path: "${appDocumentsDir.path}/recording.m4a");
+        await record.start(const RecordConfig(), path: "${appDocumentsDir.path}/recording.mp4");
       }
     } catch (e) {
       return;

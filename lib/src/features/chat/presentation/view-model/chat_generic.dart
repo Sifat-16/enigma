@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:enigma/src/core/router/model/initial_data_model.dart';
 
 class ChatGeneric {
@@ -10,20 +12,32 @@ class ChatGeneric {
   // }
 
   InitialDataModel? incomingChatData;
-  bool? isLoading;
+  bool? isImageUploading;
+  bool? isVoiceUploading;
   String? timer;
+  File? imageFile;
 
   ChatGeneric({
     this.incomingChatData,
-    this.isLoading,
-    this.timer = "Record Starting"
+    this.isImageUploading,
+    this.isVoiceUploading,
+    this.timer = "Record Starting",
+    this.imageFile,
   });
 
-  ChatGeneric update({InitialDataModel? incomingChatData, bool? isLoading, String? timer}) {
+  ChatGeneric update({
+    InitialDataModel? incomingChatData,
+    bool? isImageUploading,
+    bool? isVoiceUploading,
+    String? timer,
+    File? imageFile,
+  }) {
     return ChatGeneric(
       incomingChatData: incomingChatData ?? this.incomingChatData,
-      isLoading: isLoading ?? this.isLoading,
+      isImageUploading: isImageUploading ?? this.isImageUploading,
+      isVoiceUploading: isVoiceUploading ?? this.isVoiceUploading,
       timer: timer ?? this.timer,
+      imageFile: imageFile ?? this.imageFile,
     );
   }
 }

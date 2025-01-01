@@ -4,40 +4,60 @@ import 'package:enigma/src/core/utils/extension/context_extension.dart';
 import 'package:enigma/src/core/utils/logger/logger.dart';
 import 'package:enigma/src/features/chat/domain/entity/chat_entity.dart';
 import 'package:enigma/src/features/chat/presentation/components/voice_message_view.dart';
+import 'package:enigma/src/features/chat/presentation/view-model/chat_controller.dart';
+import 'package:enigma/src/features/chat/presentation/view-model/chat_generic.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class ChatUI extends StatelessWidget {
-  ChatUI({super.key, required this.chat});
+class ChatUI extends ConsumerStatefulWidget {
+  const ChatUI({super.key, required this.chat});
 
-  bool isSameDay = false;
   final List<ChatEntity> chat;
 
   @override
+  ConsumerState<ChatUI> createState() => _ChatUIState();
+}
+
+class _ChatUIState extends ConsumerState<ChatUI> {
+  bool isSameDay = false;
+
+  @override
   Widget build(BuildContext context) {
+    final ChatGeneric chatController = ref.watch(chatProvider);
     // print(context.width);
     // print(chat.length);
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ListView.builder(
         reverse: true,
-        itemCount: chat.length,
+        itemCount: widget.chat.length,
         itemBuilder: (context, index) {
           if (index > 0) {
             try {
-              isSameDay = DateFormat.yMEd().format(chat[index].timestamp!) ==
-                  DateFormat.yMEd().format(chat[index - 1].timestamp!);
+              isSameDay = DateFormat.yMEd().format(widget.chat[index].timestamp!) ==
+                  DateFormat.yMEd().format(widget.chat[index - 1].timestamp!);
               debug("IS SAME DAY: ${isSameDay}");
             } catch (e) {}
           }
 
-          chat.sort(
+          widget.chat.sort(
             (b, a) =>
                 DateTime.parse(a.timestamp.toString()).compareTo(DateTime.parse(b.timestamp.toString())),
           );
-          if (chat[index].sender == FirebaseHandler.auth.currentUser!.uid) {
+          if (widget.chat[index].sender == FirebaseHandler.auth.currentUser!.uid) {
             return Column(
               children: [
+
+                // else if(chatController.isVoiceUploading == true)
+                //   SizedBox(
+                //     child: Container(
+                //       child: Stack(children: [
+                //
+                //         const CircularProgressIndicator(),
+                //       ],),
+                //     ),
+                //   )
                 // if (!isSameDay)
                 //   Center(
                 //     child: Container(
@@ -60,7 +80,7 @@ class ChatUI extends StatelessWidget {
                       ),
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: chat[index].type == MediaType.voice
+                        color: widget.chat[index].type == MediaType.voice
                             ? Colors.transparent
                             : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
@@ -69,25 +89,26 @@ class ChatUI extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (chat[index].content != null && chat[index].content != "")
+                          if (widget.chat[index].content != null && widget.chat[index].content != "")
                             ConstrainedBox(
                               constraints: BoxConstraints(
-                                maxWidth: MediaQuery.of(context).size.width * 0.8, // Adjust max width as needed
+                                maxWidth:
+                                    MediaQuery.of(context).size.width * 0.8, // Adjust max width as needed
                               ),
                               child: Text(
-                                "${chat[index].content}",
+                                "${widget.chat[index].content}",
                                 softWrap: true,
                                 textAlign: TextAlign.justify,
                               ),
                             ),
-                          if (chat[index].mediaLink != null)
-                            if (chat[index].type == MediaType.image)
+                          if (widget.chat[index].mediaLink != null)
+                            if (widget.chat[index].type == MediaType.image)
                               GestureDetector(
                                 onTap: () {},
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(10),
                                   child: CachedNetworkImage(
-                                    imageUrl: chat[index].mediaLink!,
+                                    imageUrl: widget.chat[index].mediaLink!,
                                     fit: BoxFit.cover,
                                     placeholder: (context, url) => const Center(
                                       child: CircularProgressIndicator(),
@@ -96,19 +117,19 @@ class ChatUI extends StatelessWidget {
                                   ),
                                 ),
                               )
-                            else if (chat[index].type == MediaType.video)
+                            else if (widget.chat[index].type == MediaType.video)
                               const Text("There is video. Will add later on")
-                            else if (chat[index].type == MediaType.voice)
-                                VoiceMessageViewWidget(
-                                  url: chat[index].mediaLink ?? "",
-                                  isFile: false,
-                                )
-                              else if (chat[index].type == MediaType.file)
-                                  const Text("There is file. Will add later on"),
+                            else if (widget.chat[index].type == MediaType.voice)
+                              VoiceMessageViewWidget(
+                                url: widget.chat[index].mediaLink ?? "",
+                                isFile: false,
+                              )
+                            else if (widget.chat[index].type == MediaType.file)
+                              const Text("There is file. Will add later on"),
                           Align(
                             alignment: Alignment.centerRight,
                             child: Text(
-                              DateFormat.jm().format(chat[index].timestamp!),
+                              DateFormat.jm().format(widget.chat[index].timestamp!),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
@@ -117,7 +138,25 @@ class ChatUI extends StatelessWidget {
                     ),
                   ),
                 ),
-
+                if (chatController.isImageUploading == true)
+                  Container(
+                    margin: EdgeInsets.only(
+                      top: 5,
+                      bottom: 5,
+                      right: 10,
+                      left: context.width * 0.2,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image.file(chatController.imageFile!),
+                          const CircularProgressIndicator(),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             );
           } else {
@@ -137,7 +176,7 @@ class ChatUI extends StatelessWidget {
                   ),
                   // width: context.width * .8,
                   decoration: BoxDecoration(
-                    color: chat[index].type == MediaType.voice
+                    color: widget.chat[index].type == MediaType.voice
                         ? Colors.transparent
                         : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10),
@@ -145,20 +184,20 @@ class ChatUI extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (chat[index].content != null)
+                      if (widget.chat[index].content != null)
                         Text(
-                          "${chat[index].content}",
+                          "${widget.chat[index].content}",
                           softWrap: true,
                           textAlign: TextAlign.justify,
                         ),
-                      if (chat[index].mediaLink != null)
-                        if (chat[index].type == MediaType.image)
+                      if (widget.chat[index].mediaLink != null)
+                        if (widget.chat[index].type == MediaType.image)
                           GestureDetector(
                             onTap: () {},
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(8),
                               child: CachedNetworkImage(
-                                imageUrl: chat[index].mediaLink!,
+                                imageUrl: widget.chat[index].mediaLink!,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => const Center(
                                   child: CircularProgressIndicator(),
@@ -167,19 +206,19 @@ class ChatUI extends StatelessWidget {
                               ),
                             ),
                           )
-                        else if (chat[index].type == MediaType.video)
+                        else if (widget.chat[index].type == MediaType.video)
                           const Text("There is video. Will add later on")
-                        else if (chat[index].type == MediaType.voice)
+                        else if (widget.chat[index].type == MediaType.voice)
                           VoiceMessageViewWidget(
-                            url: chat[index].mediaLink ?? "",
+                            url: widget.chat[index].mediaLink ?? "",
                             isFile: false,
                           )
-                        else if (chat[index].type == MediaType.file)
+                        else if (widget.chat[index].type == MediaType.file)
                           const Text("There is file. Will add later on"),
                       Align(
                         alignment: Alignment.centerRight,
                         child: Text(
-                          DateFormat.jm().format(chat[index].timestamp!),
+                          DateFormat.jm().format(widget.chat[index].timestamp!),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),

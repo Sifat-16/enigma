@@ -78,6 +78,7 @@ class _MessageScreenState extends ConsumerState<MessageScreen> {
         appBar: SharedAppbar(
             title: const Text("Home"),
             // leadingWidget: GestureDetector(
+
             //   onTap: () {},
             //   child: Container(
             //     height: context.height * .05,

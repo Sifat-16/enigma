@@ -81,12 +81,16 @@ class ChatController extends StateNotifier<ChatGeneric> {
     return response;
   }
 
-  Future<String?> addImageMedia({
-    required File file,
-    required String directory,
-    required String fileName,
-  }) async {
-    state = state.update(isLoading: true);
+  Future<String?> addImageMedia(
+      {required File file,
+      required String directory,
+      required String fileName,
+      MediaType mediaType = MediaType.text}) async {
+    if (mediaType == MediaType.image) {
+      state = state.update(isImageUploading: true);
+    } else if (mediaType == MediaType.voice) {
+      state = state.update(isVoiceUploading: true);
+    }
     String? url;
     ImageMediaDto params = ImageMediaDto(
       file: file,
@@ -100,7 +104,7 @@ class ChatController extends StateNotifier<ChatGeneric> {
       debug(right.message);
       url = right.message;
     });
-    state = state.update(isLoading: false);
+    state = state.update(isImageUploading: false, isVoiceUploading: false);
     return url;
   }
 

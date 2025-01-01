@@ -10,8 +10,7 @@ import 'package:enigma/src/features/story/domain/entity/story_entity.dart';
 import 'package:enigma/src/features/story/domain/entity/user_story_entity.dart';
 
 class StoryRemoteDataSource {
-  Future<Either<Failure, Success>> addStory(
-      {required StoryDto storyDto}) async {
+  Future<Either<Failure, Success>> addStory({required StoryDto storyDto}) async {
     Failure failure = Failure(message: "");
     try {
       await FirebaseHandler.fireStore
@@ -44,8 +43,7 @@ class StoryRemoteDataSource {
     return Left(failure);
   }
 
-  Future<Either<Failure, UserStoryEntity>> getStories(
-      {required String uid}) async {
+  Future<Either<Failure, UserStoryEntity>> getStories({required String uid}) async {
     Failure failure = Failure(message: "");
 
     List<StoryEntity> stories = [];
@@ -53,10 +51,7 @@ class StoryRemoteDataSource {
 
     try {
       DocumentSnapshot<Map<String, dynamic>> documentSnapshot =
-          await FirebaseHandler.fireStore
-              .collection(FirestoreCollectionName.storyCollection)
-              .doc(uid)
-              .get();
+          await FirebaseHandler.fireStore.collection(FirestoreCollectionName.storyCollection).doc(uid).get();
 
       if (documentSnapshot.exists) {
         String uid = documentSnapshot.get("uid");
@@ -75,8 +70,7 @@ class StoryRemoteDataSource {
         StoryEntity storyEntity = StoryEntity.fromJson(data);
         DateTime today = DateTime.now();
         DateTime? anotherDate = storyEntity.timestamp;
-        int daysDifference =
-            today.difference(anotherDate ?? DateTime.now()).inDays;
+        int daysDifference = today.difference(anotherDate ?? DateTime.now()).inDays;
         if (daysDifference <= 1) {
           stories.add(StoryEntity.fromJson(data));
         }
@@ -101,5 +95,18 @@ class StoryRemoteDataSource {
     }
 
     return Left(failure);
+  }
+
+  Future<Stream<List<UserStoryEntity>>> getAllStories() async {
+    try {
+      Stream<List<UserStoryEntity>> userStories =
+          FirebaseHandler.fireStore.collection(FirestoreCollectionName.storyCollection).snapshots().map(
+        (stories) {
+          return stories.docs.map((e) => UserStoryEntity.fromJson(e.data())).toList();
+        },
+      );
+      return userStories;
+    } catch (e) {}
+    return Stream.value([]);
   }
 }

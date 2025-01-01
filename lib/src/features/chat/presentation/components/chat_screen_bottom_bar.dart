@@ -26,7 +26,6 @@ class ChatScreenBottomBar extends ConsumerStatefulWidget {
     super.key,
     required this.sender,
     required this.receiver,
-
   });
 
   final String sender;
@@ -81,7 +80,7 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                   imageSource: ImageSource.gallery,
                 );
                 container.read(goRouterProvider).pop();
-                messageTextController.value.text = await ChatUtils.textRecognition(imageFile.value!);
+                // messageTextController.value.text = await ChatUtils.textRecognition(imageFile.value!);
               },
               icon: Icons.perm_media_outlined,
             ),
@@ -179,7 +178,10 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                         onPressed: () {
                           audioFile.value = null;
                         },
-                        icon: const Icon(Icons.delete, color: Colors.red,),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                        ),
                       ),
                       Expanded(
                         child: VoiceMessageViewWidget(
@@ -189,13 +191,15 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                       ),
                       IconButton(
                         onPressed: () async {
-                          LoadingHandler.showLoading();
+                          // LoadingHandler.showLoading();
                           File? temporaryFile = audioFile.value;
+
                           audioFile.value = null;
                           url = await ref.read(chatProvider.notifier).addImageMedia(
                                 file: temporaryFile!,
                                 directory: FirebaseStorageDirectoryName.CHAT_MEDIA_DIRECTORY,
                                 fileName: const Uuid().v4(),
+                                mediaType: MediaType.voice,
                               );
                           ChatEntity chatEntity = ChatEntity(
                             id: const Uuid().v4(),
@@ -270,8 +274,8 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                               imageFile.value = await ChatUtils.pickImage(
                                 imageSource: ImageSource.camera,
                               );
-                              messageTextController.value.text =
-                                  await ChatUtils.textRecognition(imageFile.value!);
+                              // messageTextController.value.text =
+                              //     await ChatUtils.textRecognition(imageFile.value!);
                             },
                             child: CircleAvatar(
                               //radius: context.width * 0.05,
@@ -318,13 +322,15 @@ class _ChatScreenBottomBarState extends ConsumerState<ChatScreenBottomBar> {
                           String message = messageTextController.value.text.trim();
                           messageTextController.value.text = "";
                           if (temporaryFile != null) {
-                            LoadingHandler.showLoading();
+                            chatController.imageFile = temporaryFile;
+                            // LoadingHandler.showLoading();
                             url = await ref.read(chatProvider.notifier).addImageMedia(
                                   file: temporaryFile,
                                   directory: FirebaseStorageDirectoryName.CHAT_MEDIA_DIRECTORY,
                                   fileName: temporaryFile.path.split("/").last,
+                                  mediaType: MediaType.image,
                                 );
-                            LoadingHandler.hideLoading();
+                            // LoadingHandler.hideLoading();
                           }
                           if (message.isNotEmpty || temporaryFile != null) {
                             ChatEntity chatEntity = ChatEntity(
